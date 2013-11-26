@@ -64,10 +64,13 @@ function wh_admin_scripts() {
 
 	// Top level menu items
 	foreach ( $menu as $item ) {
-
-		$top_name = $item[0];
+		
+		$top_name = rtrim( preg_replace( '/<span.*<\/span>/', '', $item[0] ) ); /* Remove all 'count' spans, e.g. Updates <span...>5</span> */
 		$top_url = $item[2];
 
+		// Set top level link
+		$menu_items[ $top_name ][ 'Top' ] = $top_url;
+		
 		// Sub menu items
 		foreach ( $submenu as $parent_url => $sub_item ) {
 		
@@ -75,12 +78,12 @@ function wh_admin_scripts() {
 
 				foreach ( $sub_item as $item ) {
 					
-					$sub_name = $item[0];
+					$sub_name = rtrim( preg_replace( '/<span.*<\/span>/', '', $item[0] ) ); /* Remove all 'count' spans, e.g. Updates <span...>5</span> */
 					$sub_url = $item[2];
 
 					// Fix for Dashboard > Updates to not include update number in key
-					if ( FALSE !== strpos( $top_name, 'Dashboard') && FALSE !== strpos( $sub_name, 'Update') )
-						$sub_name = 'Updates';
+					//if ( FALSE !== strpos( $top_name, 'Dashboard') && FALSE !== strpos( $sub_name, 'Update') )
+					//	$sub_name = 'Updates';
 
 					$menu_items[ $top_name ][ $sub_name ] = $sub_url;
 
@@ -92,6 +95,9 @@ function wh_admin_scripts() {
 
 	}
 
+	echo '<pre>' . print_r($menu_items, true) . '</pre>';
+			
+
 	/*----------------------------------------------------------------------------*
 	 * Hotkey behavior
 	 *----------------------------------------------------------------------------*/
@@ -101,24 +107,27 @@ function wh_admin_scripts() {
 	$hotkeys = array(
 
 		// Dashboard
-		'd'         => $menu_items['Dashboard']['Home'],
+		'd'         => $menu_items['Dashboard']['Top'],
 		'u'         => $menu_items['Dashboard']['Updates'],
 
 		// Posts
-		'p'         => $menu_items['Posts']['All Posts'],
+		'p'         => $menu_items['Posts']['Top'],
 		'shift+p'   => $menu_items['Posts']['Add New'],
 
 		// Media
-		'm'         => $menu_items['Media']['Library'],
+		'm'         => $menu_items['Media']['Top'],
 		'shift+m'   => $menu_items['Media']['Add New'],
 
 		// Pages
-		'g'         => $menu_items['Pages']['All Pages'],
+		'g'         => $menu_items['Pages']['Top'],
 		'shift+g'   => $menu_items['Pages']['Add New'],
 
 		// Comments
-		'c'         => $menu_items['Comments']['Library'],
-		'shift+m'   => $menu_items['Media']['Add New'],
+		'c'         => $menu_items['Comments']['Top'],
+
+		// Appearance
+		'a'         => $menu_items['Appearance']['Top'],
+		't'         => $menu_items['Appearance']['Themes'],
 
 	);
 
