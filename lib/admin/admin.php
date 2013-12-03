@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /**
  * Creates admin settings page
@@ -12,7 +12,7 @@ function wh_do_settings_page() {
 	add_options_page( WH_PLUGIN_NAME, 'WordPress Hotkeys', 'manage_options', 'wordpress-hotkeys', 'wh_output_settings');
 
 }
-add_action('admin_menu', 'wh_do_settings_page');
+add_action( 'admin_menu', 'wh_do_settings_page' );
 
 /**
  * Outputs settings page with form
@@ -24,10 +24,22 @@ function wh_output_settings() { ?>
 	<div class="wrap">
 		<?php screen_icon(); ?>
 		<h2><?php echo WH_PLUGIN_NAME; ?></h2>
-		<form method="post" action="options.php">
-		    <?php settings_fields( 'wordpress-hotkeys' ); ?>
+		<form method="post" action="options.php" class="wh-form">
+			<p class="submit">
+				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
+				<a type="reset" name="wh-reset" id="wh-reset-top" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wordpress-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wordpress-hotkeys' ); ?></a>
+			</p>
+			<?php settings_fields( 'wordpress-hotkeys' ); ?>
+			<h2>General Settings</h2>
+		    <?php do_settings_sections( 'general-settings' ); ?>
+		    <br />
+		    <h2>Hotkeys</h2>
 		    <?php do_settings_sections( 'wordpress-hotkeys' ); ?>
-			<?php submit_button(); ?>
+			<p class="submit">
+				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
+				<a type="reset" name="wh-reset" id="wh-reset-bottom" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wordpress-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wordpress-hotkeys' ); ?></a>
+			</p>
+			
 		</form>
 	</div>
 <?php }
@@ -40,95 +52,99 @@ function wh_output_settings() { ?>
  */
 function wh_register_settings() {
 
+	global $menu_items;
+
 	register_setting( 'wh-settings-group', 'wh-settings-group', 'wh-settings-validate' );
-	
-	// Setting sections
+
+	// General Options
 	add_settings_section(
-		'wh-settings-section',
-		'Main Settings',
+		'wh-general-settings',
 		'',
-		'wordpress-hotkeys'
+		'',
+		'general-settings'
 	);
 
-	/* Define settings fields */
-
-	// Menu Containers
+	// Show hotkey hints
 	$fields[] = array (
-		'id' => 'wh-containers',
-		'title' => __( 'Menu Container(s) Class / ID', 'wh' ),
+		'id' => 'show-hints',
+		'title' => __( 'Show hotkey hints', 'wordpress-hotkeys' ),
 		'callback' => 'wh_output_fields',
-		'section' => 'wordpress-hotkeys',
-		'page' => 'wh-settings-section',
+		'page' => 'general-settings',
+		'section' => 'wh-general-settings',
 		'args' => array( 
-			'type' => 'text',
-			'validation' => 'wp_kses_post',
-			'description' => __( 'Comma separated list of selectors for the parent div containing each menu &lt;ul&gt;.<br />Example: #nav, .mini-nav', 'wh' ),
-		)
-	);
-
-	// Maximum width
-	$fields[] = array (
-		'id' => 'wh-width',
-		'title' => __( 'Maximum Menu Width', 'wh' ),
-		'callback' => 'wh_output_fields',
-		'section' => 'wordpress-hotkeys',
-		'page' => 'wh-settings-section',
-		'args' => array( 
-			'type' => 'text',
-			'validation' => 'intval',
-			'after_text' => 'px',
-			'description' => __( 'The width at which the responsive select menu should appear/disappear.', 'wh' ),
-		)
-	);
-
-	// Sub-item spacer
-	$fields[] = array (
-		'id' => 'wh-sub-item-spacer',
-		'title' => __( 'Sub Item Spacer', 'wh' ),
-		'callback' => 'wh_output_fields',
-		'section' => 'wordpress-hotkeys',
-		'page' => 'wh-settings-section',
-		'args' => array(
-			'type' => 'text',
-			'validation' => 'wp_kses_post',
-			'description' => __( 'The character(s) used to indent sub items.', 'wh' ),
-		)
-	);
-
-	// First term name
-	$fields[] = array (
-		'id' => 'wh-first-term',
-		'title' => __( 'First Term', 'wh' ),
-		'callback' => 'wh_output_fields',
-		'section' => 'wordpress-hotkeys',
-		'page' => 'wh-settings-section',
-		'args' => array(
-			'type' => 'text',
-			'validation' => 'wp_kses_post',
-			'description' => __( 'The text for the select menu\'s top-level "dummy" item.<br />Example: ⇒ Navigation', 'wh' ),
-		)
-	);
-
-	// Show current page
-	$fields[] = array (
-		'id' => 'wh-show-current-page',
-		'title' => __( 'Show Current Page', 'wh' ),
-		'callback' => 'wh_output_fields',
-		'section' => 'wordpress-hotkeys',
-		'page' => 'wh-settings-section',
-		'args' => array(
 			'type' => 'checkbox',
-			'after_text' => __( 'Show the currently selected page instead of the top level "dummy" item.', 'wh' ),
+			'validation' => 'wp_kses_post',
 		)
 	);
 
-	// Add settings fields
-	foreach( $fields as $field ) {
-		wh_register_settings_field( $field['id'], $field['title'], $field['callback'], $field['section'], $field['page'], $field );	
+	// Exit hotkey
+	$fields[] = array (
+		'id' => 'close-hover-hotkey',
+		'title' => __( 'Hotkey to close hover menu', 'wordpress-hotkeys' ),
+		'callback' => 'wh_output_fields',
+		'page' => 'general-settings',
+		'section' => 'wh-general-settings',
+		'args' => array( 
+			'type' => 'text',
+			'validation' => 'wp_kses_post',
+		)
+	);
+
+	// Do hotkey settings for each admin menu item
+	foreach ( $menu_items as $item_name => $item) {	
+
+		// Menu item setting sections
+		add_settings_section(
+			'wh-settings-section-' . $item_name,
+			$item_name,
+			'',
+			'wordpress-hotkeys'
+		);
+
+		// Top level menu items
+		$fields[] = array (
+			'id' => htmlspecialchars( $item_name ),
+			'title' => $item_name,
+			'callback' => 'wh_output_fields',
+			'page' => 'wordpress-hotkeys',
+			'section' => 'wh-settings-section-' . $item_name,
+			'args' => array( 
+				'type' => 'text',
+				'validation' => 'wp_kses_post',
+				'level' => 'top',
+				'default_hotkey' => ! empty( $item['default_hotkey'] ) ? $item['default_hotkey'] : '',
+			)
+		);
+
+		// Sub menu items
+		if ( !empty ( $item['sub_items'] ) ) {
+
+			foreach( $item['sub_items'] as $sub_item_name => $sub_item ) {
+
+				$fields[] = array (
+					'id' => htmlspecialchars( $item_name ) . '-' . htmlspecialchars( $sub_item_name ),
+					'title' => $sub_item_name,
+					'callback' => 'wh_output_fields',
+					'page' => 'wordpress-hotkeys',
+					'section' => 'wh-settings-section-' . $item_name,
+					'args' => array( 
+						'type' => 'text',
+						'validation' => 'wp_kses_post',
+						'default_hotkey' => ! empty( $sub_item['default_hotkey'] ) ? $sub_item['default_hotkey'] : '',
+					)
+				);
+
+			}
+
+		}
+
 	}
 
+	foreach ( $fields as $field )
+		wh_register_settings_field( $field['id'], $field['title'], $field['callback'], $field['page'], $field['section'], $field );
+
 	// Register settings
-	register_setting('wordpress-hotkeys','wh-output-method');
+	register_setting( 'wordpress-hotkeys', 'wh-options' );
 
 }
 add_action( 'admin_init', 'wh_register_settings' );
@@ -139,62 +155,40 @@ add_action( 'admin_init', 'wh_register_settings' );
  * @package WordPress Hotkeys
  * @since   1.0		
  */	
-function wh_register_settings_field( $id, $title, $callback, $section, $page, $field ) {
+function wh_register_settings_field( $id, $title, $callback, $page, $section, $field ) {
 
 	// Add settings field	
-	add_settings_field( $id, $title, $callback, $section, $page, $field );
+	add_settings_field( $id, $title, $callback, $page, $section, $field );
 
 	// Register setting with appropriate validation
 	$validation = !empty( $field['args']['validation'] ) ? $field['args']['validation'] : '';
-	register_setting( $section, $id, $validation );
 
 }
 
 function wh_output_fields( $field ) {
-	
-	/* Set default values if setting is empty */
 
-	// Get setting
-	$value = get_option( $field['id'] );
-	
-	// Set defaults if empty
-	if ( empty( $value ) ) {
+	// Get hotkey options
+	$options = get_option( 'wh-options' );
 
-		switch( $field['id'] ) {
-
-			// Examples
-			
-			/*
-			case 'wh-first-term-name':
-				update_option( 'wh-first-term-name', '⇒ Navigation' );
-				break;
-
-			case 'wh-sub-item-spacer':
-				update_option( 'wh-sub-item-spacer', '-' );
-				break;
-			*/
-		
-		}
-
-	}
-	
-	/* Output admin form elements for each settings field */
+	$value = isset( $options[ htmlspecialchars( $field['id'] ) ] ) ? $options[ htmlspecialchars( $field['id'] ) ] : '';
 	
 	// Get necessary input args
 	$type = $field['args']['type'];
-	$placeholder = !empty( $field['args']['placeholder'] ) ? ' placeholder="' . $field['args']['placeholder'] . '" ' : '';
 
 	// Output form elements
 	switch( $type ) {
 
 		// Text fields
 		case 'text':
-			echo '<input name="' . $field['id'] . '" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"' . $placeholder . '" />';
+			echo '<input name="wh-options[' . htmlspecialchars( $field['id'] ) . ']" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"/>';
+			if ( isset( $field['args']['level'] ) )
+				echo ' [top level]';
 			break;
 
 		// Checkbox
 		case 'checkbox':
-			echo '<input name="' . $field['id'] . '" id="' . $field['id'] . '" type="' . $type . '" value="1"' . $placeholder . checked( get_option( $field['id'] ), 1, false ) . '" />';
+			echo '<input name="wh-options[' . $field['id'] . ']" id="' . $field['id'] . '" type="hidden" value="0"' . checked( get_option( 'wh-options' )[ $field['id'] ], 1, false ) . '" />';
+			echo '<input name="wh-options[' . $field['id'] . ']" id="' . $field['id'] . '" type="' . $type . '" value="1"' . checked( get_option( 'wh-options' )[ $field['id'] ], 1, false ) . '" />';
 			break;
 
 	}
@@ -206,4 +200,5 @@ function wh_output_fields( $field ) {
 	// Description
 	if ( !empty( $field['args']['description'] ) )
 		echo '<br /><em>' . $field['args']['description'] . "</em>\n";
+
 }
