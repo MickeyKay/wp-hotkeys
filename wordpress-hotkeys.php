@@ -19,6 +19,7 @@
  * Change hover off to escape, not space
  * add ability/option to show hotkeys
  * language stuff i18n
+ * remove option on uninstall
  */
 
 // Definitions
