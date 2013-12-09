@@ -52,7 +52,7 @@ function wh_output_settings() { ?>
  */
 function wh_register_settings() {
 
-	global $menu_items;
+	global $wh_menu_items;
 
 	register_setting( 'wh-settings-group', 'wh-settings-group', 'wh-settings-validate' );
 
@@ -91,7 +91,7 @@ function wh_register_settings() {
 	);
 
 	// Do hotkey settings for each admin menu item
-	foreach ( $menu_items as $item_name => $item) {	
+	foreach ( $wh_menu_items as $item_name => $item) {	
 
 		// Menu item setting sections
 		add_settings_section(

@@ -14,12 +14,10 @@
  * Fix plugins (2) and better solution for update including number
  * Better way to simulate mouseove/hover than manually adding class?
  * Better way to reset if combo of mouse/key hover/off-hover (e.g. use key to hover, then mouse triggers off hover)
- * document.ready vs window.load?
- * Don't include separator
- * Change hover off to escape, not space
  * add ability/option to show hotkeys
  * language stuff i18n
- * remove option on uninstall
+ * add jQuery duplicate validation
+ * doesn't work on appearance > menus for some reason :(
  */
 
 // Definitions
@@ -51,7 +49,7 @@ add_action( 'plugins_init', 'wh_init' );
 function wh_admin_scripts() {
     
     // Admin menu items
-    global $menu_items;
+    global $wh_menu_items;
 
     // Get options
     $options = get_option( 'wh-options' );
@@ -64,7 +62,7 @@ function wh_admin_scripts() {
 
 	// Setup PHP variables to pass to jQuery
 	$phpVars = array (
-		'menuItems' => $menu_items,
+		'menuItems' => $wh_menu_items,
 		'adminUrl' => get_admin_url(),
 		'showHints' => $options[ 'show-hints' ],
 		'closeHoverHotkey' => $options[ 'close-hover-hotkey' ],
@@ -85,17 +83,17 @@ add_action( 'admin_enqueue_scripts', 'wh_admin_scripts' );
 function wh_menu_functionality() {
     
     // Admin menu items
-    global $menu_items;
+    global $wh_menu_items;
 
     // Get admin menu items
-	$menu_items = wh_get_menu_items();
+	$wh_menu_items = wh_get_menu_items();
 
 	// Add hotkey defaults
-	$menu_items = wh_hotkey_defaults( $menu_items );
+	$wh_menu_items = wh_hotkey_defaults( $wh_menu_items );
 
 	// Setup PHP variables to pass to jQuery
 	$phpVars = array (
-		'menuItems' => $menu_items,
+		'menuItemss' => $wh_menu_items,
 		'adminUrl' => get_admin_url(),
 	);
 
@@ -111,13 +109,13 @@ add_action( 'admin_bar_init', 'wh_menu_functionality' );
  * @package WordPress Hotkeys
  * @since   1.0.0
  *
- * @return  array $menu_items array populated with admin top-level and sub-menu items
+ * @return  array $wh_menu_items array populated with admin top-level and sub-menu items
  */
 function wh_get_menu_items() {
 
-	global $menu, $submenu, $menu_items;
+	global $menu, $submenu, $wh_menu_items;
 
-	$menu_items = array();
+	$wh_menu_items = array();
 
 	// Top level menu items
 	foreach ( $menu as $item ) {
@@ -128,7 +126,7 @@ function wh_get_menu_items() {
 
 		// Set top level link
 		if ( $top_name )
-			$menu_items[ $top_name ]['url'] = get_admin_menu_item_url( $item[2] );
+			$wh_menu_items[ $top_name ]['url'] = get_admin_menu_item_url( $item[2] );
 	
 		// Sub menu items
 		foreach ( $submenu as $p_file => $submenu_item ) {
@@ -145,7 +143,7 @@ function wh_get_menu_items() {
 					$submenu_item_url = get_admin_menu_item_url( $sub_file );
 					
 					if ( $submenu_item_name )
-						$menu_items[ $top_name ]['sub_items'][$submenu_item_name ]['url'] = $submenu_item_url;
+						$wh_menu_items[ $top_name ]['sub_items'][$submenu_item_name ]['url'] = $submenu_item_url;
 
 				}
 
@@ -155,25 +153,23 @@ function wh_get_menu_items() {
 
 	}
 	
-	return $menu_items;
+	return $wh_menu_items;
 
 }
 
 /**
  * Get the URL of an admin menu item
  *
- * $menu & $submenu structure:
- * 0 = name, 1 = capability, 2 = file, 3 = class, 4 = id, 5 = icon src
- *
  * @package WordPress Hotkeys
  * @since   1.0.0
  *
- * @param   string $file admin menu item file - $menu[][2]
+ * @param   string $menu_item_file admin menu item file
+ *          - can be obtained via array key #2 for any item in the global $menu or $submenu array
  * @param   boolean $submenu_as_parent
  * 
  * @return  string URL of admin menu item, NULL if the menu item file can't be found in $menu or $submenu 
  */
-function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
+function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 	global $menu, $submenu, $self, $parent_file, $submenu_file, $plugin_page, $typenow;
 
 	$admin_is_parent = false;
@@ -183,7 +179,7 @@ function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
 
 	// 1. Check if top-level menu item
 	foreach( $menu as $key => $menu_item ) {
-		if ( array_keys( $menu_item, $file, true ) ) {
+		if ( array_keys( $menu_item, $menu_item_file, true ) ) {
 			$item = $menu[ $key ];
 		}
 
@@ -204,6 +200,7 @@ function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
 		elseif ( ! empty( $item[2] ) && current_user_can( $item[1] ) ) {
 			$menu_hook = get_plugin_page_hook( $item[2], 'admin.php' );
 			$menu_file = $item[2];
+
 			if ( false !== ( $pos = strpos( $menu_file, '?' ) ) )
 				$menu_file = substr( $menu_file, 0, $pos );
 			if ( ! empty( $menu_hook ) || ( ( 'index.php' != $item[2] ) && file_exists( WP_PLUGIN_DIR . "/$menu_file" ) && ! file_exists( ABSPATH . "/wp-admin/$menu_file" ) ) ) {
@@ -218,18 +215,17 @@ function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
 	// 2. Check if sub-level menu item
 	if ( ! $item ) {
 		$sub_item = '';
-		
 		foreach( $submenu as $top_file => $submenu_items ) {
-
+					
 			// Reindex $submenu_items
 			$submenu_items = array_values( $submenu_items );
 
 			foreach( $submenu_items as $key => $submenu_item ) {
-				if ( array_keys( $submenu_item, $file ) ) {
+				if ( array_keys( $submenu_item, $menu_item_file ) ) {
 					$sub_item = $submenu_items[ $key ];
 					break;
 				}
-			}
+			}					
 			
 			if ( ! empty( $sub_item ) )
 				break;
@@ -242,6 +238,12 @@ function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
 				break;
 			}
 		}
+
+				
+
+		// If the $menu_item_file parameter doesn't match any menu item, return false
+		if ( ! $sub_item )
+			return false;
 
 		// Get URL
 		$menu_file = $item[2];
@@ -263,31 +265,26 @@ function get_admin_menu_item_url( $file, $submenu_as_parent = true ) {
 				$url = add_query_arg( array( 'page' => $sub_item[2] ), $item[2] );
 			else
 				$url = add_query_arg( array( 'page' => $sub_item[2] ), 'admin.php' );
-		}
-		else {
+		} else {
 			$url = $sub_item[2];
 		}
 	}
-
-	// 3. If $file doesn't exist in $menu or $submenu, return false
-	if ( ! $item && ! $submenu_item )
-		return false;
 
 	return esc_url( $url );
 
 }
 
 /**
- * Setup hotkey defaults on $menu_items array
+ * Setup hotkey defaults on $wh_menu_items array
  *
  * @package WordPress Hotkeys
  * @since   1.0.0
  *
- * @param   array $menu_items array of admin menu items
+ * @param   array $wh_menu_items array of admin menu items
  * 
  * @return  array admin menu array with hotkey defaults added
  */
-function wh_hotkey_defaults( $menu_items ) {
+function wh_hotkey_defaults( $wh_menu_items ) {
 
 	// General settings
 	$general_options['show-hints']                                       = 0;
@@ -295,67 +292,67 @@ function wh_hotkey_defaults( $menu_items ) {
 
 	// Hotkeys
 	// Dashboard
-	$menu_items['Dashboard']['default']                                  = 'd';
-	$menu_items['Dashboard']['sub_items']['Home']['default']             = 'h';
-	$menu_items['Dashboard']['sub_items']['Updates']['default']          = 'u';
+	$wh_menu_items['Dashboard']['default']                                  = 'd';
+	$wh_menu_items['Dashboard']['sub_items']['Home']['default']             = 'h';
+	$wh_menu_items['Dashboard']['sub_items']['Updates']['default']          = 'u';
 
 	// Posts
-	$menu_items['Posts']['default']                                      = 'p';
-	$menu_items['Posts']['sub_items']['All Posts']['default']            = 'a';
-	$menu_items['Posts']['sub_items']['Add New']['default']              = 'n';
-	$menu_items['Posts']['sub_items']['Categories']['default']           = 'c';
-	$menu_items['Posts']['sub_items']['Tags']['default']                 = 't';
+	$wh_menu_items['Posts']['default']                                      = 'p';
+	$wh_menu_items['Posts']['sub_items']['All Posts']['default']            = 'a';
+	$wh_menu_items['Posts']['sub_items']['Add New']['default']              = 'n';
+	$wh_menu_items['Posts']['sub_items']['Categories']['default']           = 'c';
+	$wh_menu_items['Posts']['sub_items']['Tags']['default']                 = 't';
 
 	// Media
-	$menu_items['Media']['default']                                      = 'm';
-	$menu_items['Media']['sub_items']['Library']['default']              = "l";
-	$menu_items['Media']['sub_items']['Add New']['default']              = "n";
+	$wh_menu_items['Media']['default']                                      = 'm';
+	$wh_menu_items['Media']['sub_items']['Library']['default']              = "l";
+	$wh_menu_items['Media']['sub_items']['Add New']['default']              = "n";
 
 	// Pages
-	$menu_items['Pages']['default']                                      = 'g';
-	$menu_items['Pages']['sub_items']['All Pages']['default']            = 'a';
-	$menu_items['Pages']['sub_items']['Add New']['default']              = 'n';
+	$wh_menu_items['Pages']['default']                                      = 'g';
+	$wh_menu_items['Pages']['sub_items']['All Pages']['default']            = 'a';
+	$wh_menu_items['Pages']['sub_items']['Add New']['default']              = 'n';
 
 	// Comments
-	$menu_items['Comments']['default']                                   = 'c';
+	$wh_menu_items['Comments']['default']                                   = 'c';
 
 	// Appearance
-	$menu_items['Appearance']['default']                                 = 'a';
-	$menu_items['Appearance']['sub_items']['Themes']['default']          = 't';
-	$menu_items['Appearance']['sub_items']['Customize']['default']       = 'c';
-	$menu_items['Appearance']['sub_items']['Widgets']['default']         = 'w';
-	$menu_items['Appearance']['sub_items']['Menus']['default']           = 'm';
-	$menu_items['Appearance']['sub_items']['Header']['default']          = 'h';
-	$menu_items['Appearance']['sub_items']['Background']['default']      = 'b';
-	$menu_items['Appearance']['sub_items']['Editor']['default']          = 'e';
+	$wh_menu_items['Appearance']['default']                                 = 'a';
+	$wh_menu_items['Appearance']['sub_items']['Themes']['default']          = 't';
+	$wh_menu_items['Appearance']['sub_items']['Customize']['default']       = 'c';
+	$wh_menu_items['Appearance']['sub_items']['Widgets']['default']         = 'w';
+	$wh_menu_items['Appearance']['sub_items']['Menus']['default']           = 'm';
+	$wh_menu_items['Appearance']['sub_items']['Header']['default']          = 'h';
+	$wh_menu_items['Appearance']['sub_items']['Background']['default']      = 'b';
+	$wh_menu_items['Appearance']['sub_items']['Editor']['default']          = 'e';
 
 	// Plugins
-	$menu_items['Plugins']['default']                                    = 'n';
-	$menu_items['Plugins']['sub_items']['Installed Plugins']['default']  = 'i';
-	$menu_items['Plugins']['sub_items']['Add New']['default']            = 'n';
-	$menu_items['Plugins']['sub_items']['Editor']['default']             = 'e';
+	$wh_menu_items['Plugins']['default']                                    = 'n';
+	$wh_menu_items['Plugins']['sub_items']['Installed Plugins']['default']  = 'i';
+	$wh_menu_items['Plugins']['sub_items']['Add New']['default']            = 'n';
+	$wh_menu_items['Plugins']['sub_items']['Editor']['default']             = 'e';
 
 	// Users
-	$menu_items['Users']['default']                                      = 'u';
-	$menu_items['Users']['sub_items']['All Users']['default']            = 'a';
-	$menu_items['Users']['sub_items']['Add New']['default']              = 'n';
-	$menu_items['Users']['sub_items']['Your Profile']['default']         = 'y';
+	$wh_menu_items['Users']['default']                                      = 'u';
+	$wh_menu_items['Users']['sub_items']['All Users']['default']            = 'a';
+	$wh_menu_items['Users']['sub_items']['Add New']['default']              = 'n';
+	$wh_menu_items['Users']['sub_items']['Your Profile']['default']         = 'y';
 
 	// Tools
-	$menu_items['Tools']['default']                                      = 't';
-	$menu_items['Tools']['sub_items']['Available Tools']['default']      = 'a';
-	$menu_items['Tools']['sub_items']['Import']['default']               = 'i';
-	$menu_items['Tools']['sub_items']['Export']['default']               = 'e';
+	$wh_menu_items['Tools']['default']                                      = 't';
+	$wh_menu_items['Tools']['sub_items']['Available Tools']['default']      = 'a';
+	$wh_menu_items['Tools']['sub_items']['Import']['default']               = 'i';
+	$wh_menu_items['Tools']['sub_items']['Export']['default']               = 'e';
 
 	// Settings
-	$menu_items['Settings']['default']                                   = 's';
-	$menu_items['Settings']['sub_items']['General']['default']           = 'g';
-	$menu_items['Settings']['sub_items']['Writing']['default']           = 'w';
-	$menu_items['Settings']['sub_items']['Reading']['default']           = 'r';
-	$menu_items['Settings']['sub_items']['Discussion']['default']        = 'd';
-	$menu_items['Settings']['sub_items']['Media']['default']             = 'm';
-	$menu_items['Settings']['sub_items']['Permalinks']['default']        = 'p';
-	$menu_items['Settings']['sub_items']['WordPress Hotkeys']['default'] = 'h';
+	$wh_menu_items['Settings']['default']                                   = 's';
+	$wh_menu_items['Settings']['sub_items']['General']['default']           = 'g';
+	$wh_menu_items['Settings']['sub_items']['Writing']['default']           = 'w';
+	$wh_menu_items['Settings']['sub_items']['Reading']['default']           = 'r';
+	$wh_menu_items['Settings']['sub_items']['Discussion']['default']        = 'd';
+	$wh_menu_items['Settings']['sub_items']['Media']['default']             = 'm';
+	$wh_menu_items['Settings']['sub_items']['Permalinks']['default']        = 'p';
+	$wh_menu_items['Settings']['sub_items']['WordPress Hotkeys']['default'] = 'h';
 
 	// Setup hotkey default options
 	$reset = false;
@@ -364,9 +361,9 @@ function wh_hotkey_defaults( $menu_items ) {
 		$reset = true;
 	}
 
-	wh_set_defaults( $menu_items, $general_options, $reset );
+	wh_set_defaults( $wh_menu_items, $general_options, $reset );
 
-	return $menu_items;
+	return $wh_menu_items;
 
 }
 
@@ -376,10 +373,10 @@ function wh_hotkey_defaults( $menu_items ) {
  * @package WordPress Hotkeys
  * @since   1.0.0
  *
- * @param   array &$menu_items array of admin menu items (by reference)
+ * @param   array &$wh_menu_items array of admin menu items (by reference)
  * @param   boolean $reset whether to entirely reset defaults (true) or just not-yet-existing options (false)
  */
-function wh_set_defaults( &$menu_items, $general_options, $reset = false ) {
+function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 
 	// Get hotkey options
 	$options = get_option( 'wh-options' );
@@ -396,7 +393,7 @@ function wh_set_defaults( &$menu_items, $general_options, $reset = false ) {
 	}
 	
 	// Hotkey defaults
-	foreach ( $menu_items as $item_name => $item) {
+	foreach ( $wh_menu_items as $item_name => $item) {
 
 		// Reset all defaults (if user clicks "Reset" button)
 		if ( $reset )
@@ -406,7 +403,7 @@ function wh_set_defaults( &$menu_items, $general_options, $reset = false ) {
 		elseif ( ! isset( $options[ htmlspecialchars( $item_name ) ] ) )
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default']: '';
 
-		$menu_items[ $item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name ) ];
+		$wh_menu_items[ $item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name ) ];
 
 		// Sub menu items
 		if ( !empty ( $item['sub_items'] ) ) {
@@ -421,8 +418,8 @@ function wh_set_defaults( &$menu_items, $general_options, $reset = false ) {
 				elseif ( ! isset( $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] ) )
 					$options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default'] ) ? $sub_item['default'] : '';
 
-				// Set hotkey for $menu_items submenu items
-				$menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ];
+				// Set hotkey for $wh_menu_items submenu items
+				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ];
 				
 			}
 
