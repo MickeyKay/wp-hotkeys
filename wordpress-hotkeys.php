@@ -101,7 +101,7 @@ function wh_menu_functionality() {
 	wp_localize_script( 'wordpress-hotkeys', 'phpVars', $phpVars );
 
 }
-add_action( 'admin_bar_init', 'wh_menu_functionality' );
+add_action( 'admin_init', 'wh_menu_functionality', 9 );
 
 /**
  * Setup menu_items[] array with admin top-level and sub-menu items
