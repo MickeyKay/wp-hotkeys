@@ -117,6 +117,10 @@ function wh_get_menu_items() {
 
 	$wh_menu_items = array();
 
+	// Prevent breakage with AJAX when dragging widgets
+	if ( !$menu )
+		return false;
+			
 	// Top level menu items
 	foreach ( $menu as $item ) {
 		
