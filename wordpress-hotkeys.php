@@ -17,7 +17,7 @@
  * add ability/option to show hotkeys
  * language stuff i18n
  * add jQuery duplicate validation
- * doesn't work on appearance > menus for some reason :(
+ * doesn't work on themes.php > menus for some reason :(
  */
 
 // Definitions
@@ -129,8 +129,10 @@ function wh_get_menu_items() {
 		$top_file = $item[2];
 
 		// Set top level link
-		if ( $top_name )
-			$wh_menu_items[ $top_name ]['url'] = get_admin_menu_item_url( $item[2] );
+		if ( $top_file ) {
+			$wh_menu_items[ $top_file ]['name'] = $top_name;
+			$wh_menu_items[ $top_file ]['url'] = get_admin_menu_item_url( $item[2] );
+		}
 	
 		// Sub menu items
 		foreach ( $submenu as $p_file => $submenu_item ) {
@@ -146,8 +148,10 @@ function wh_get_menu_items() {
 
 					$submenu_item_url = get_admin_menu_item_url( $sub_file );
 					
-					if ( $submenu_item_name )
-						$wh_menu_items[ $top_name ]['sub_items'][$submenu_item_name ]['url'] = $submenu_item_url;
+					if ( $submenu_item_url ) {
+						$wh_menu_items[ $top_file ]['sub_items'][$submenu_item_url ]['name'] = $submenu_item_name;
+						$wh_menu_items[ $top_file ]['sub_items'][$submenu_item_url ]['url'] = $submenu_item_url;
+					}
 
 				}
 
@@ -289,74 +293,74 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
  * @return  array admin menu array with hotkey defaults added
  */
 function wh_hotkey_defaults( $wh_menu_items ) {
-
+			
 	// General settings
 	$general_options['show-hints']                                       = 0;
 	$general_options['close-hover-hotkey']                               = 'esc';
 
 	// Hotkeys
-	// Dashboard
-	$wh_menu_items['Dashboard']['default']                                  = 'd';
-	$wh_menu_items['Dashboard']['sub_items']['Home']['default']             = 'h';
-	$wh_menu_items['Dashboard']['sub_items']['Updates']['default']          = 'u';
+	
+	// Dashboard - index.php
+	$wh_menu_items['index.php']['default']                                  = 'd';
+	$wh_menu_items['index.php']['sub_items']['index.php']['default']             = 'h';
+	$wh_menu_items['index.php']['sub_items']['update-core.php']['default']          = 'u';
 
-	// Posts
-	$wh_menu_items['Posts']['default']                                      = 'p';
-	$wh_menu_items['Posts']['sub_items']['All Posts']['default']            = 'a';
-	$wh_menu_items['Posts']['sub_items']['Add New']['default']              = 'n';
-	$wh_menu_items['Posts']['sub_items']['Categories']['default']           = 'c';
-	$wh_menu_items['Posts']['sub_items']['Tags']['default']                 = 't';
+	// Posts - edit.php
+	$wh_menu_items['edit.php']['default']                                      = 'p';
+	$wh_menu_items['edit.php']['sub_items']['edit.php']['default']            = 'a';
+	$wh_menu_items['edit.php']['sub_items']['post-new.php']['default']              = 'n';
+	$wh_menu_items['edit.php']['sub_items']['edit-tags.php?taxonomy=category']['default']           = 'c';
+	$wh_menu_items['edit.php']['sub_items']['edit-tags.php?taxonomy=post_tag']['default']                 = 't';
 
 	// Media
-	$wh_menu_items['Media']['default']                                      = 'm';
-	$wh_menu_items['Media']['sub_items']['Library']['default']              = "l";
-	$wh_menu_items['Media']['sub_items']['Add New']['default']              = "n";
+	$wh_menu_items['upload.php']['default']                                      = 'm';
+	$wh_menu_items['upload.php']['sub_items']['upload.php']['default']              = "l";
+	$wh_menu_items['upload.php']['sub_items']['media-new.php']['default']              = "n";
 
 	// Pages
-	$wh_menu_items['Pages']['default']                                      = 'g';
-	$wh_menu_items['Pages']['sub_items']['All Pages']['default']            = 'a';
-	$wh_menu_items['Pages']['sub_items']['Add New']['default']              = 'n';
+	$wh_menu_items['edit.php?post_type=page']['default']                                      = 'g';
+	$wh_menu_items['edit.php?post_type=page']['sub_items']['edit.php?post_type=page']['default']            = 'a';
+	$wh_menu_items['edit.php?post_type=page']['sub_items']['post-new.php?post_type=page']['default']              = 'n';
 
 	// Comments
-	$wh_menu_items['Comments']['default']                                   = 'c';
+	$wh_menu_items['edit-comments.php']['default']                                   = 'c';
 
-	// Appearance
-	$wh_menu_items['Appearance']['default']                                 = 'a';
-	$wh_menu_items['Appearance']['sub_items']['Themes']['default']          = 't';
-	$wh_menu_items['Appearance']['sub_items']['Customize']['default']       = 'c';
-	$wh_menu_items['Appearance']['sub_items']['Widgets']['default']         = 'w';
-	$wh_menu_items['Appearance']['sub_items']['Menus']['default']           = 'm';
-	$wh_menu_items['Appearance']['sub_items']['Header']['default']          = 'h';
-	$wh_menu_items['Appearance']['sub_items']['Background']['default']      = 'b';
-	$wh_menu_items['Appearance']['sub_items']['Editor']['default']          = 'e';
+	// themes.php
+	$wh_menu_items['themes.php']['default']                                 = 'a';
+	$wh_menu_items['themes.php']['sub_items']['themes.php']['default']          = 't';
+	$wh_menu_items['themes.php']['sub_items']['customize.php']['default']       = 'c';
+	$wh_menu_items['themes.php']['sub_items']['widgets.php']['default']         = 'w';
+	$wh_menu_items['themes.php']['sub_items']['nav-menus.php']['default']           = 'm';
+	$wh_menu_items['themes.php']['sub_items']['themes.php?page=custom-background']['default']      = 'b';
+	$wh_menu_items['themes.php']['sub_items']['theme-editor.php']['default']          = 'e';
 
 	// Plugins
-	$wh_menu_items['Plugins']['default']                                    = 'n';
-	$wh_menu_items['Plugins']['sub_items']['Installed Plugins']['default']  = 'i';
-	$wh_menu_items['Plugins']['sub_items']['Add New']['default']            = 'n';
-	$wh_menu_items['Plugins']['sub_items']['Editor']['default']             = 'e';
+	$wh_menu_items['plugins.php']['default']                                    = 'n';
+	$wh_menu_items['plugins.php']['sub_items']['plugins.php']['default']  = 'i';
+	$wh_menu_items['plugins.php']['sub_items']['plugin-install.php']['default']            = 'n';
+	$wh_menu_items['plugins.php']['sub_items']['plugin-editor.php']['default']             = 'e';
 
 	// Users
-	$wh_menu_items['Users']['default']                                      = 'u';
-	$wh_menu_items['Users']['sub_items']['All Users']['default']            = 'a';
-	$wh_menu_items['Users']['sub_items']['Add New']['default']              = 'n';
-	$wh_menu_items['Users']['sub_items']['Your Profile']['default']         = 'y';
+	$wh_menu_items['users.php']['default']                                      = 'u';
+	$wh_menu_items['users.php']['sub_items']['users.php']['default']            = 'a';
+	$wh_menu_items['users.php']['sub_items']['user-new.php']['default']              = 'n';
+	$wh_menu_items['users.php']['sub_items']['profile.php']['default']         = 'y';
 
 	// Tools
-	$wh_menu_items['Tools']['default']                                      = 't';
-	$wh_menu_items['Tools']['sub_items']['Available Tools']['default']      = 'a';
-	$wh_menu_items['Tools']['sub_items']['Import']['default']               = 'i';
-	$wh_menu_items['Tools']['sub_items']['Export']['default']               = 'e';
+	$wh_menu_items['tools.php']['default']                                      = 't';
+	$wh_menu_items['tools.php']['sub_items']['tools.php']['default']      = 'a';
+	$wh_menu_items['tools.php']['sub_items']['import.php']['default']               = 'i';
+	$wh_menu_items['tools.php']['sub_items']['export.php']['default']               = 'e';
 
 	// Settings
-	$wh_menu_items['Settings']['default']                                   = 's';
-	$wh_menu_items['Settings']['sub_items']['General']['default']           = 'g';
-	$wh_menu_items['Settings']['sub_items']['Writing']['default']           = 'w';
-	$wh_menu_items['Settings']['sub_items']['Reading']['default']           = 'r';
-	$wh_menu_items['Settings']['sub_items']['Discussion']['default']        = 'd';
-	$wh_menu_items['Settings']['sub_items']['Media']['default']             = 'm';
-	$wh_menu_items['Settings']['sub_items']['Permalinks']['default']        = 'p';
-	$wh_menu_items['Settings']['sub_items']['WordPress Hotkeys']['default'] = 'h';
+	$wh_menu_items['options-general.php']['default']                                   = 's';
+	$wh_menu_items['options-general.php']['sub_items']['options-general.php']['default']           = 'g';
+	$wh_menu_items['options-general.php']['sub_items']['options-writing.php']['default']           = 'w';
+	$wh_menu_items['options-general.php']['sub_items']['options-reading.php']['default']           = 'r';
+	$wh_menu_items['options-general.php']['sub_items']['options-discussion.php']['default']        = 'd';
+	$wh_menu_items['options-general.php']['sub_items']['options-media.php']['default']             = 'm';
+	$wh_menu_items['options-general.php']['sub_items']['options-permalink.php']['default']        = 'p';
+	$wh_menu_items['options-general.php']['sub_items']['options-general.php?page=wordpress-hotkeys']['default'] = 'h';
 
 	// Setup hotkey default options
 	$reset = false;
@@ -381,6 +385,8 @@ function wh_hotkey_defaults( $wh_menu_items ) {
  * @param   boolean $reset whether to entirely reset defaults (true) or just not-yet-existing options (false)
  */
 function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
+
+			
 
 	// Get hotkey options
 	$options = get_option( 'wh-options' );

@@ -53,10 +53,10 @@ function wh_output_settings() { ?>
 function wh_register_settings() {
 
 	global $wh_menu_items;
-
+			
 	register_setting( 'wh-settings-group', 'wh-settings-group', 'wh-settings-validate' );
 
-	// General Options
+	// 1. General Options
 	add_settings_section(
 		'wh-general-settings',
 		'',
@@ -90,8 +90,40 @@ function wh_register_settings() {
 		)
 	);
 
-	// Do hotkey settings for each admin menu item
-	foreach ( $wh_menu_items as $item_name => $item) {	
+	// 2. Do hotkey settings for each admin menu item
+	
+	// Check for duplicates
+	foreach ( $wh_menu_items as $item_file => $item) {
+				
+		if ( $item['name'] && $item['hotkey'] )
+			$hotkeys[ $item_file ] = $item['hotkey'];
+
+		if ( empty( $item['sub_items'] ) )
+			continue;
+
+		foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
+
+			if ( $sub_item['name'] && $sub_item['hotkey'] )
+				$sub_hotkeys[ $sub_item_file ] = $item['hotkey'];
+
+		}
+	
+	}
+
+	// Top level duplicates array
+	$duplicates = wh_get_keys_for_duplicates( $hotkeys );
+
+	if ( $duplicates )
+		add_action( 'admin_notices', 'wh_admin_notice' );
+			
+
+	// Output actual fields
+	foreach ( $wh_menu_items as $item_file => $item) {	
+				
+		if ( empty( $item['name'] ) )
+			continue;
+
+		$item_name = $item['name'];
 
 		// Menu item setting sections
 		add_settings_section(
@@ -101,9 +133,14 @@ function wh_register_settings() {
 			'wordpress-hotkeys'
 		);
 
+		// Add duplicate arg if two of the same hotkey exist
+		$duplicate = false;
+		if ( in_array( $item_file, $duplicates ) )
+			$duplicate = true;
+
 		// Top level menu items
 		$fields[] = array (
-			'id' => htmlspecialchars( $item_name ),
+			'id' => $item_file,
 			'title' => $item_name,
 			'callback' => 'wh_output_fields',
 			'page' => 'wordpress-hotkeys',
@@ -112,17 +149,23 @@ function wh_register_settings() {
 				'type' => 'text',
 				'validation' => 'wp_kses_post',
 				'level' => 'top',
-				'default_hotkey' => ! empty( $item['default_hotkey'] ) ? $item['default_hotkey'] : '',
+				'duplicate' => $duplicate,
 			)
 		);
+
 
 		// Sub menu items
 		if ( !empty ( $item['sub_items'] ) ) {
 
-			foreach( $item['sub_items'] as $sub_item_name => $sub_item ) {
+			foreach( $item['sub_items'] as $sub_item_file => $sub_item ) {
+
+				if ( empty( $sub_item['name'] ) )
+					continue;
+
+				$sub_item_name = $sub_item['name'];
 
 				$fields[] = array (
-					'id' => htmlspecialchars( $item_name ) . '-' . htmlspecialchars( $sub_item_name ),
+					'id' => $item_file. '-' . $sub_item_file,
 					'title' => $sub_item_name,
 					'callback' => 'wh_output_fields',
 					'page' => 'wordpress-hotkeys',
@@ -130,7 +173,6 @@ function wh_register_settings() {
 					'args' => array( 
 						'type' => 'text',
 						'validation' => 'wp_kses_post',
-						'default_hotkey' => ! empty( $sub_item['default_hotkey'] ) ? $sub_item['default_hotkey'] : '',
 					)
 				);
 
@@ -180,9 +222,17 @@ function wh_output_fields( $field ) {
 
 		// Text fields
 		case 'text':
-			echo '<input name="wh-options[' . htmlspecialchars( $field['id'] ) . ']" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"/>';
+			// Check if this hotkey has a duplicate
+			$style = '';
+			if ( isset( $field['args']['duplicate'] ) && $field['args']['duplicate'] )
+				$style = ' style="border-color: red;" ';
+
+			echo '<input name="wh-options[' . htmlspecialchars( $field['id'] ) . ']" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"' . $style . '/>';
+			
+			// Indicate top-level menu items
 			if ( isset( $field['args']['level'] ) )
 				echo ' [top level]';
+
 			break;
 
 		// Checkbox
@@ -202,3 +252,21 @@ function wh_output_fields( $field ) {
 		echo '<br /><em>' . $field['args']['description'] . "</em>\n";
 
 }
+
+function wh_get_keys_for_duplicates( $array ) {
+
+	$counts = array_count_values( $array );
+	
+	$filtered = array_filter( $counts, function( $value ) {
+	    return $value != 1;
+	});
+
+	return array_keys( array_intersect( $array, array_keys( $filtered ) ) );
+
+}
+
+function wh_admin_notice() { ?>
+	<div class="error">
+		<p><?php printf( __( '<b>There are duplicate hotkeys.</b> Please visit the %sWordPress Hotkeys settings page%s to fix this issue.', 'wordpress-hotkeys' ), '<a href="options-general.php?page=wordpress-hotkeys&settings-updated=true">', '</a>' ); ?></p>
+	</div>
+<?php }
