@@ -25,6 +25,17 @@ function wh_output_settings() { ?>
 		<?php screen_icon(); ?>
 		<h2><?php echo WH_PLUGIN_NAME; ?></h2>
 		<form method="post" action="options.php" class="wh-form">
+			<style>
+				.wh-form tr:first-child .warning {
+					border-color: red;
+				}
+
+				.wh-form .warning {
+					border-color: orange;
+				}
+
+
+			</style>
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
 				<a type="reset" name="wh-reset" id="wh-reset-top" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wordpress-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wordpress-hotkeys' ); ?></a>
@@ -91,29 +102,36 @@ function wh_register_settings() {
 	);
 
 	// 2. Do hotkey settings for each admin menu item
-	
+	$duplicate = '';
+	$sub_duplicates = '';
+
 	// Check for duplicates
 	foreach ( $wh_menu_items as $item_file => $item) {
 				
+		// Top level
 		if ( $item['name'] && $item['hotkey'] )
 			$hotkeys[ $item_file ] = $item['hotkey'];
 
+		// Sub level
 		if ( empty( $item['sub_items'] ) )
 			continue;
 
 		foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
 
 			if ( $sub_item['name'] && $sub_item['hotkey'] )
-				$sub_hotkeys[ $sub_item_file ] = $item['hotkey'];
+				$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'];
 
 		}
+
+		if ( isset( $sub_hotkeys[ $item_file ] ) && wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] ) )
+			$sub_duplicates[ $item_file ] = wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] );
 	
 	}
 
 	// Top level duplicates array
 	$duplicates = wh_get_keys_for_duplicates( $hotkeys );
 
-	if ( $duplicates )
+	if ( $duplicates || $sub_duplicates )
 		add_action( 'admin_notices', 'wh_admin_notice' );
 			
 
@@ -164,6 +182,11 @@ function wh_register_settings() {
 
 				$sub_item_name = $sub_item['name'];
 
+				// Add duplicate arg if two of the same hotkey exist
+				$duplicate = false;
+				if ( isset( $sub_duplicates[ $item_file ] ) && in_array( $sub_item_file, $sub_duplicates[ $item_file ] ) )
+					$duplicate = true;
+
 				$fields[] = array (
 					'id' => $item_file. '-' . $sub_item_file,
 					'title' => $sub_item_name,
@@ -173,6 +196,7 @@ function wh_register_settings() {
 					'args' => array( 
 						'type' => 'text',
 						'validation' => 'wp_kses_post',
+						'duplicate' => $duplicate,
 					)
 				);
 
@@ -223,11 +247,11 @@ function wh_output_fields( $field ) {
 		// Text fields
 		case 'text':
 			// Check if this hotkey has a duplicate
-			$style = '';
+			$class = '';
 			if ( isset( $field['args']['duplicate'] ) && $field['args']['duplicate'] )
-				$style = ' style="border-color: red;" ';
+				$class = ' class="warning" ';
 
-			echo '<input name="wh-options[' . htmlspecialchars( $field['id'] ) . ']" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"' . $style . '/>';
+			echo '<input name="wh-options[' . htmlspecialchars( $field['id'] ) . ']" id="' . $field['id'] . '" type="' . $type . '" value="' . $value . '"' . $class . '/>';
 			
 			// Indicate top-level menu items
 			if ( isset( $field['args']['level'] ) )
@@ -268,5 +292,7 @@ function wh_get_keys_for_duplicates( $array ) {
 function wh_admin_notice() { ?>
 	<div class="error">
 		<p><?php printf( __( '<b>There are duplicate hotkeys.</b> Please visit the %sWordPress Hotkeys settings page%s to fix this issue.', 'wordpress-hotkeys' ), '<a href="options-general.php?page=wordpress-hotkeys&settings-updated=true">', '</a>' ); ?></p>
+		<p>Top level duplicates are indicated with red.<br />
+			Sub-level duplicates are indicated with orange.</p>
 	</div>
 <?php }

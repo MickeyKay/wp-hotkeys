@@ -18,6 +18,9 @@
  * language stuff i18n
  * add jQuery duplicate validation
  * doesn't work on themes.php > menus for some reason :(
+ * add arrow navigation once top level menu is open
+ * not working for Types top level menu item :(
+ * add modifier keys
  */
 
 // Definitions
@@ -181,34 +184,38 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 	global $menu, $submenu, $self, $parent_file, $submenu_file, $plugin_page, $typenow;
 
 	$admin_is_parent = false;
+	$submenu_items = '';
 	$item = '';
-	$submenu_item = '';
 	$url = '';
 
 	// 1. Check if top-level menu item
 	foreach( $menu as $key => $menu_item ) {
-		if ( array_keys( $menu_item, $menu_item_file, true ) ) {
-			$item = $menu[ $key ];
-		}
 
-		if ( $submenu_as_parent && ! empty( $submenu_item ) ) {
-			$menu_hook = get_plugin_page_hook( $submenu_item[2], $item[2] );
-			$menu_file = $submenu_item[2];
-		
+		if ( array_keys( $menu_item, $menu_item_file, true ) )
+			$item = $menu[ $key ];
+		else
+			continue;
+
+		// Get submenu items
+		$submenu_items = false;
+		if ( ! empty( $submenu[$item[2]] ) ) 
+			$submenu_items = $submenu[$item[2]];
+
+		if ( $submenu_as_parent && ! empty( $submenu_items ) ) {
+			$submenu_items = array_values( $submenu_items );  // Re-index.
+			$menu_hook = get_plugin_page_hook( $submenu_items[0][2], $item[2] );
+			$menu_file = $submenu_items[0][2];
 			if ( false !== ( $pos = strpos( $menu_file, '?' ) ) )
 				$menu_file = substr( $menu_file, 0, $pos );
-			if ( ! empty( $menu_hook ) || ( ( 'index.php' != $submenu_item[2] ) && file_exists( WP_PLUGIN_DIR . "/$menu_file" ) && ! file_exists( ABSPATH . "/wp-admin/$menu_file" ) ) ) {
+			if ( ! empty( $menu_hook ) || ( ( 'index.php' != $submenu_items[0][2] ) && file_exists( WP_PLUGIN_DIR . "/$menu_file" ) && ! file_exists( ABSPATH . "/wp-admin/$menu_file" ) ) ) {
 				$admin_is_parent = true;
-				$url = 'admin.php?page=' . $submenu_item[2];
+				$url = 'admin.php?page=' . $submenu_items[0][2];
 			} else {
-				$url = $submenu_item[2];
+				$url = $submenu_items[0][2];
 			}
-		}
-
-		elseif ( ! empty( $item[2] ) && current_user_can( $item[1] ) ) {
+		} elseif ( ! empty( $item[2] ) && current_user_can( $item[1] ) ) {
 			$menu_hook = get_plugin_page_hook( $item[2], 'admin.php' );
 			$menu_file = $item[2];
-
 			if ( false !== ( $pos = strpos( $menu_file, '?' ) ) )
 				$menu_file = substr( $menu_file, 0, $pos );
 			if ( ! empty( $menu_hook ) || ( ( 'index.php' != $item[2] ) && file_exists( WP_PLUGIN_DIR . "/$menu_file" ) && ! file_exists( ABSPATH . "/wp-admin/$menu_file" ) ) ) {
@@ -246,8 +253,6 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 				break;
 			}
 		}
-
-				
 
 		// If the $menu_item_file parameter doesn't match any menu item, return false
 		if ( ! $sub_item )
