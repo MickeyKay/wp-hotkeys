@@ -330,6 +330,12 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	// Comments
 	$wh_menu_items['edit-comments.php']['default']                                   = 'c';
 
+	// Genesis
+	$wh_menu_items['genesis']['default']                                   = 'shift+g';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis']['default']                                   = 'g';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=seo-settings']['default']                                   = 's';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis-import-export']['default']                                   = 'i';
+
 	// themes.php
 	$wh_menu_items['themes.php']['default']                                 = 'a';
 	$wh_menu_items['themes.php']['sub_items']['themes.php']['default']          = 't';
