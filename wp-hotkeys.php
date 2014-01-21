@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WordPress Hotkeys
+ * Plugin Name: WP Hotkeys
  * Plugin URI:  http://mightyminnow.com
  * Description: Provides hotkeys to navigate the WordPress dashboard.
  * Version:     1.0.0
@@ -16,15 +16,14 @@
  * Better way to reset if combo of mouse/key hover/off-hover (e.g. use key to hover, then mouse triggers off hover)
  * add ability/option to show hotkeys
  * language stuff i18n
- * add jQuery duplicate validation
- * doesn't work on themes.php > menus for some reason :(
  * add arrow navigation once top level menu is open
- * not working for Types top level menu item :(
- * add modifier keys
+ * add modifier key select element (or at least explanation of how to add)
+ * add ability to export/import
+ * minify and provide non-minified version
  */
 
 // Definitions
-define( 'WH_PLUGIN_NAME', 'WordPress Hotkeys' );
+define( 'WH_PLUGIN_NAME', 'WP Hotkeys' );
 
 // Includes
 require_once dirname( __FILE__ ) . '/lib/admin/admin.php';
@@ -32,8 +31,9 @@ require_once dirname( __FILE__ ) . '/lib/admin/admin.php';
 /**
  * Loads text domain for internationalization
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  */
 function wh_init() {
 
@@ -46,8 +46,9 @@ add_action( 'plugins_init', 'wh_init' );
 /**
  * Enqueue required scripts & styles and pass PHP variables to jQuery file
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  */
 function wh_admin_scripts() {
     
@@ -61,7 +62,7 @@ function wh_admin_scripts() {
 	wp_enqueue_script( 'jquery-hotkeys' );
 
 	// Include WH jQuery
-    wp_enqueue_script( 'wordpress-hotkeys', plugins_url( '/lib/js/wordpress-hotkeys.js', __FILE__ ), array( 'jquery' ), '1.0.0', false );
+    wp_enqueue_script( 'wp-hotkeys', plugins_url( '/lib/js/wp-hotkeys.js', __FILE__ ), array( 'jquery' ), '1.0.0', false );
 
 	// Setup PHP variables to pass to jQuery
 	$phpVars = array (
@@ -72,7 +73,7 @@ function wh_admin_scripts() {
 	);
 
 	// Pass menu items to jQuery
-	wp_localize_script( 'wordpress-hotkeys', 'phpVars', $phpVars );
+	wp_localize_script( 'wp-hotkeys', 'phpVars', $phpVars );
 
 }
 add_action( 'admin_enqueue_scripts', 'wh_admin_scripts' );
@@ -80,8 +81,9 @@ add_action( 'admin_enqueue_scripts', 'wh_admin_scripts' );
 /**
  * Setup $menu_item array
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  */
 function wh_menu_functionality() {
     
@@ -101,7 +103,7 @@ function wh_menu_functionality() {
 	);
 
 	// Pass menu items to jQuery
-	wp_localize_script( 'wordpress-hotkeys', 'phpVars', $phpVars );
+	wp_localize_script( 'wp-hotkeys', 'phpVars', $phpVars );
 
 }
 add_action( 'admin_init', 'wh_menu_functionality', 9 );
@@ -109,8 +111,9 @@ add_action( 'admin_init', 'wh_menu_functionality', 9 );
 /**
  * Setup menu_items[] array with admin top-level and sub-menu items
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  *
  * @return  array $wh_menu_items array populated with admin top-level and sub-menu items
  */
@@ -171,8 +174,9 @@ function wh_get_menu_items() {
 /**
  * Get the URL of an admin menu item
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  *
  * @param   string $menu_item_file admin menu item file
  *          - can be obtained via array key #2 for any item in the global $menu or $submenu array
@@ -290,8 +294,9 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 /**
  * Setup hotkey defaults on $wh_menu_items array
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  *
  * @param   array $wh_menu_items array of admin menu items
  * 
@@ -300,7 +305,7 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 function wh_hotkey_defaults( $wh_menu_items ) {
 			
 	// General settings
-	$general_options['show-hints']                                       = 0;
+	$general_options['show-hints']                                       = 1;
 	$general_options['close-hover-hotkey']                               = 'esc';
 
 	// Hotkeys
@@ -329,6 +334,12 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 
 	// Comments
 	$wh_menu_items['edit-comments.php']['default']                                   = 'c';
+
+	// Genesis
+	$wh_menu_items['genesis']['default']                                   = 'shift+g';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis']['default']                                   = 'g';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=seo-settings']['default']                                   = 's';
+	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis-import-export']['default']                                   = 'i';
 
 	// themes.php
 	$wh_menu_items['themes.php']['default']                                 = 'a';
@@ -365,7 +376,7 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	$wh_menu_items['options-general.php']['sub_items']['options-discussion.php']['default']        = 'd';
 	$wh_menu_items['options-general.php']['sub_items']['options-media.php']['default']             = 'm';
 	$wh_menu_items['options-general.php']['sub_items']['options-permalink.php']['default']        = 'p';
-	$wh_menu_items['options-general.php']['sub_items']['options-general.php?page=wordpress-hotkeys']['default'] = 'h';
+	$wh_menu_items['options-general.php']['sub_items']['options-general.php?page=wp-hotkeys']['default'] = 'h';
 
 	// Setup hotkey default options
 	$reset = false;
@@ -383,8 +394,9 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 /**
  * Update wh-options option with default hotkeys
  *
- * @package WordPress Hotkeys
  * @since   1.0.0
+ * 
+ * @package WP Hotkeys
  *
  * @param   array &$wh_menu_items array of admin menu items (by reference)
  * @param   boolean $reset whether to entirely reset defaults (true) or just not-yet-existing options (false)
@@ -445,5 +457,5 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 	update_option( 'wh-options', $options);
 
 	if ( $reset )
-		wp_redirect( admin_url( 'options-general.php?page=wordpress-hotkeys' ) );
+		wp_redirect( admin_url( 'options-general.php?page=wp-hotkeys' ) );
 }
