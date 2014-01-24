@@ -61,8 +61,11 @@ function wh_admin_scripts() {
 	// Include WP jQuery hotkeys functionality
 	wp_enqueue_script( 'jquery-hotkeys' );
 
-	// Include WH jQuery
-    wp_enqueue_script( 'wp-hotkeys', plugins_url( '/lib/js/wp-hotkeys.js', __FILE__ ), array( 'jquery' ), '1.0.0', false );
+	// Include WPH jQuery
+    wp_enqueue_script( 'wp-hotkeys-jquery', plugins_url( '/lib/js/wp-hotkeys.js', __FILE__ ), array( 'jquery' ), '1.0.0', false );
+
+    // Include WPH admin styles
+    wp_enqueue_style( 'wp-hotkeys-css', plugins_url( '/lib/css/wp-hotkeys.css', __FILE__ ) );
 
 	// Setup PHP variables to pass to jQuery
 	$phpVars = array (
@@ -73,7 +76,7 @@ function wh_admin_scripts() {
 	);
 
 	// Pass menu items to jQuery
-	wp_localize_script( 'wp-hotkeys', 'phpVars', $phpVars );
+	wp_localize_script( 'wp-hotkeys-jquery', 'phpVars', $phpVars );
 
 }
 add_action( 'admin_enqueue_scripts', 'wh_admin_scripts' );
