@@ -1,0 +1,11 @@
+/**
+ * WP Hotkeys CSS
+ *
+ * @since   1.0.0
+ * 
+ * @package WP Hotkeys
+ */
+
+.wph-active > a {
+	text-decoration: underline !important;
+}
