@@ -6,6 +6,10 @@
  * @package WP Hotkeys
  */
 
+.wph-top-level {
+	text-transform: uppercase;
+}
+
 .wph-active > a {
 	text-decoration: underline !important;
 }

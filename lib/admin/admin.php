@@ -7,6 +7,16 @@
  * 
  * @package WP Hotkeys
  */
+
+/**
+
+	TODO:
+	- Fix reset to reset modifiers to
+	- COmment all functions
+
+**/
+
+
 function wh_do_settings_page() {
 
 	// Create admin menu item
@@ -42,10 +52,10 @@ function wh_output_settings() { ?>
 				<a type="reset" name="wh-reset" id="wh-reset-top" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wp-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wp-hotkeys' ); ?></a>
 			</p>
 			<?php settings_fields( 'wp-hotkeys' ); ?>
-			<h2>General Settings</h2>
+			<h2><?php _e( 'General Settings', 'wp-hotkeys'); ?></h2>
 		    <?php do_settings_sections( 'general-settings' ); ?>
 		    <br />
-		    <h2>Hotkeys</h2>
+		    <h2><?php _e( 'Hotkeys', 'wp-hotkeys'); ?></h2>
 		    <?php do_settings_sections( 'wp-hotkeys' ); ?>
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
@@ -138,8 +148,7 @@ function wh_register_settings() {
 			
 
 	// Output actual fields
-	foreach ( $wh_menu_items as $item_file => $item) {	
-				
+	foreach ( $wh_menu_items as $item_file => $item) {				
 		if ( empty( $item['name'] ) )
 			continue;
 
@@ -148,7 +157,7 @@ function wh_register_settings() {
 		// Menu item setting sections
 		add_settings_section(
 			'wh-settings-section-' . $item_name,
-			$item_name,
+			'<hr />',
 			'',
 			'wp-hotkeys'
 		);
@@ -161,7 +170,7 @@ function wh_register_settings() {
 		// Top level menu items
 		$fields[] = array (
 			'id' => $item_file,
-			'title' => $item_name,
+			'title' => '<span class="wph-top-level">' . $item_name . '</span>',
 			'callback' => 'wh_output_fields',
 			'page' => 'wp-hotkeys',
 			'section' => 'wh-settings-section-' . $item_name,
@@ -237,7 +246,7 @@ function wh_output_fields( $field ) {
 
 	// Get hotkey options
 	$options = get_option( 'wh-options' );
-
+				
 	$id = $field['id'];
 
 	$value = isset( $options[ htmlspecialchars( $id ) ] ) ? $options[ htmlspecialchars( $id ) ] : '';
@@ -256,11 +265,16 @@ function wh_output_fields( $field ) {
 				$class = ' class="warning" ';
 
 			echo '<input name="wh-options[' . htmlspecialchars( $id ) . ']" id="' . $id . '" type="' . $type . '" value="' . $value . '"' . $class . '/>';
-			
-			// Indicate top-level menu items
-			if ( isset( $field['args']['level'] ) )
-				echo ' [top level]';
-
+			echo ' + ';
+			$modifier_id = $id . '-modifier'
+			?>
+			<select name="wh-options[<?php echo htmlspecialchars( $modifier_id ); ?>]" id="<?php echo $modifier_id; ?>">
+				<option value="0" <?php selected( $options[ $modifier_id ], 0 ); ?>>No modifier key</option>
+				<option value="shift" <?php selected( $options[ $modifier_id ], 'shift' ); ?>>Shift</option>
+				<option value="control" <?php selected( $options[ $modifier_id ], 'control' ); ?>>Control</option>
+				<option value="alt" <?php selected( $options[ $modifier_id ], 'alt' ); ?>>Option / Alt</option>
+			</select>
+			<?
 			break;
 
 		// Checkbox
