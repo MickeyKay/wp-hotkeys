@@ -16,6 +16,7 @@
  * add modifier key select element (or at least explanation of how to add)
  * add ability to export/import
  * minify and provide non-minified version
+ * Reset not working for very first select
  */
 
 // Definitions
@@ -53,7 +54,7 @@ function wh_admin_scripts() {
 
     // Get options
     $options = get_option( 'wh-options' );
-
+   			
 	// Include WP jQuery hotkeys functionality
 	wp_enqueue_script( 'jquery-hotkeys' );
 
@@ -410,26 +411,35 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 	// General defaults
 	// Reset all defaults (if user clicks "Reset" button)
 	foreach( $general_options as $option_name => $option ) {
-		if ( $reset )
+		if ( $reset ) {
 			$options[ $option_name ] = ! empty( $option ) ? $option : '';
+			$options[ 'modifier-' . $option_name ] = 0;
+		}
 
 		// Add default hotkey for new options
-		elseif ( ! isset( $options[ $option_name ] ) )
+		elseif ( ! isset( $options[ $option_name ] ) ) {
 			$options[ $option_name ] = ! empty( $option ) ? $option : '';
-	}
+			$options[ 'modifier-' . $option_name ] = 0;
+		}
+	}		
 	
 	// Hotkey defaults
 	foreach ( $wh_menu_items as $item_name => $item) {
 
 		// Reset all defaults (if user clicks "Reset" button)
-		if ( $reset )
+		if ( $reset ) {
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default'] : '';
+			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = 0;
+		}
 
 		// Add default hotkey for new options
-		elseif ( ! isset( $options[ htmlspecialchars( $item_name ) ] ) )
+		elseif ( ! isset( $options[ htmlspecialchars( $item_name ) ] ) ) {
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default']: '';
+			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = 0;
+		}
 
 		$wh_menu_items[ $item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name ) ];
+		$wh_menu_items[ $item_name ]['modifier'] = $options[ htmlspecialchars( 'modifier-' . $item_name ) ];	
 
 		// Sub menu items
 		if ( !empty ( $item['sub_items'] ) ) {
@@ -437,15 +447,20 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 			foreach( $item['sub_items'] as $sub_item_name => $sub_item ) {
 
 				// Reset all defaults (if user clicks "Reset" button)
-				if ( $reset )
+				if ( $reset ) {
 					$options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default'] ) ? $sub_item['default'] : '';
+					$options[ htmlspecialchars( 'modifier-' . $sub_item_name ) ] = 0;
+				}
 
 				// Add default hotkey for new options
-				elseif ( ! isset( $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] ) )
+				elseif ( ! isset( $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] ) ) {
 					$options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default'] ) ? $sub_item['default'] : '';
+					$options[ htmlspecialchars( 'modifier-' . $sub_item_name ) ] = 0;
+				}
 
 				// Set hotkey for $wh_menu_items submenu items
 				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ];
+				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['modifier'] = $options[ htmlspecialchars( 'modifier-' . $item_name . '-' . $sub_item_name ) ];
 				
 			}
 

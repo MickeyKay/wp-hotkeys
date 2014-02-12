@@ -121,7 +121,7 @@ function wh_register_settings() {
 
 		// Top level
 		if ( $item['hotkey'] )
-			$hotkeys[ $item_file ] = $item['hotkey'];
+			$hotkeys[ $item_file ] = $item['hotkey'] . '-' . $item['modifier'];
 
 		// Sub level
 		if ( empty( $item['sub_items'] ) )
@@ -130,7 +130,7 @@ function wh_register_settings() {
 		foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
 
 			if ( $sub_item['hotkey'] )
-				$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'];
+				$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'] . '-' . $sub_item['modifier'];
 
 		}
 
@@ -266,12 +266,13 @@ function wh_output_fields( $field ) {
 
 			echo '<input name="wh-options[' . htmlspecialchars( $id ) . ']" id="' . $id . '" type="' . $type . '" value="' . $value . '"' . $class . '/>';
 			echo ' + ';
-			$modifier_id = $id . '-modifier'
+			$modifier_id = 'modifier-' . $id;
 			?>
 			<select name="wh-options[<?php echo htmlspecialchars( $modifier_id ); ?>]" id="<?php echo $modifier_id; ?>">
 				<option value="0" <?php selected( $options[ $modifier_id ], 0 ); ?>>No modifier key</option>
 				<option value="shift" <?php selected( $options[ $modifier_id ], 'shift' ); ?>>Shift</option>
-				<option value="control" <?php selected( $options[ $modifier_id ], 'control' ); ?>>Control</option>
+				<option value="meta" <?php selected( $options[ $modifier_id ], 'meta' ); ?>>Command</option>
+				<option value="ctrl" <?php selected( $options[ $modifier_id ], 'ctrl' ); ?>>Control</option>
 				<option value="alt" <?php selected( $options[ $modifier_id ], 'alt' ); ?>>Option / Alt</option>
 			</select>
 			<?
