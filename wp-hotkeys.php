@@ -11,12 +11,11 @@
 
 /**
  * TODO
- * Better way to reset if combo of mouse/key hover/off-hover (e.g. use key to hover, then mouse triggers off hover)
  * language stuff i18n
- * add modifier key select element (or at least explanation of how to add)
  * add ability to export/import
  * minify and provide non-minified version
  * Reset not working for very first select
+ * Setup default modifiers (not just 0), e.g. for shift+g for genesis
  */
 
 // Definitions
@@ -310,12 +309,12 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	
 	// Hotkeys
 	
-	// Dashboard - index.php
+	// Dashboard
 	$wh_menu_items['index.php']['default']                                                                 = 'd';
 	$wh_menu_items['index.php']['sub_items']['index.php']['default']                                       = 'h';
 	$wh_menu_items['index.php']['sub_items']['update-core.php']['default']                                 = 'u';
 	
-	// Posts - edit.php
+	// Posts
 	$wh_menu_items['edit.php']['default']                                                                  = 'p';
 	$wh_menu_items['edit.php']['sub_items']['edit.php']['default']                                         = 'a';
 	$wh_menu_items['edit.php']['sub_items']['post-new.php']['default']                                     = 'n';
@@ -328,7 +327,7 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	$wh_menu_items['upload.php']['sub_items']['media-new.php']['default']                                  = "n";
 	
 	// Pages
-	$wh_menu_items['edit.php?post_type=page']['default']                                                   = 'shift+p';
+	$wh_menu_items['edit.php?post_type=page']['default']                                                   = 'g';
 	$wh_menu_items['edit.php?post_type=page']['sub_items']['edit.php?post_type=page']['default']           = 'a';
 	$wh_menu_items['edit.php?post_type=page']['sub_items']['post-new.php?post_type=page']['default']       = 'n';
 	
@@ -336,12 +335,13 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	$wh_menu_items['edit-comments.php']['default']                                                         = 'c';
 	
 	// Genesis
-	$wh_menu_items['genesis']['default']                                                                   = 'shift+g';
+	$wh_menu_items['genesis']['default']                                                                   = 'g';
+	$wh_menu_items['genesis']['default-modifier']                                                          = 'shift';
 	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis']['default']                            = 'g';
 	$wh_menu_items['genesis']['sub_items']['admin.php?page=seo-settings']['default']                       = 's';
 	$wh_menu_items['genesis']['sub_items']['admin.php?page=genesis-import-export']['default']              = 'i';
 	
-	// themes.php
+	// Themes
 	$wh_menu_items['themes.php']['default']                                                                = 'a';
 	$wh_menu_items['themes.php']['sub_items']['themes.php']['default']                                     = 't';
 	$wh_menu_items['themes.php']['sub_items']['customize.php']['default']                                  = 'c';
@@ -351,7 +351,7 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	$wh_menu_items['themes.php']['sub_items']['theme-editor.php']['default']                               = 'e';
 	
 	// Plugins
-	$wh_menu_items['plugins.php']['default']                                                               = 'g';
+	$wh_menu_items['plugins.php']['default']                                                               = 'n';
 	$wh_menu_items['plugins.php']['sub_items']['plugins.php']['default']                                   = 'i';
 	$wh_menu_items['plugins.php']['sub_items']['plugin-install.php']['default']                            = 'n';
 	$wh_menu_items['plugins.php']['sub_items']['plugin-editor.php']['default']                             = 'e';
@@ -403,8 +403,6 @@ function wh_hotkey_defaults( $wh_menu_items ) {
  */
 function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 
-			
-
 	// Get hotkey options
 	$options = get_option( 'wh-options' );
 
@@ -425,42 +423,41 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 	
 	// Hotkey defaults
 	foreach ( $wh_menu_items as $item_name => $item) {
-
 		// Reset all defaults (if user clicks "Reset" button)
 		if ( $reset ) {
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default'] : '';
-			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = 0;
+			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = ! empty( $item['default-modifier'] ) ? $item['default-modifier']: '';
 		}
 
 		// Add default hotkey for new options
 		elseif ( ! isset( $options[ htmlspecialchars( $item_name ) ] ) ) {
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default']: '';
-			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = 0;
+			$options[ htmlspecialchars( 'modifier-' . $item_name ) ] = ! empty( $item['default-modifier'] ) ? $item['default-modifier']: '';
 		}
 
-		$wh_menu_items[ $item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name ) ];
-		$wh_menu_items[ $item_name ]['modifier'] = $options[ htmlspecialchars( 'modifier-' . $item_name ) ];	
+		$wh_menu_items[ $item_name ]['hotkey'] = ! empty( $options[ htmlspecialchars( $item_name ) ] ) ? $options[ htmlspecialchars( $item_name ) ] : '';
+		$wh_menu_items[ $item_name ]['modifier'] = ! empty( $options[ htmlspecialchars( 'modifier-' . $item_name ) ] ) ? $options[ htmlspecialchars( 'modifier-' . $item_name ) ] : '';
 
 		// Sub menu items
-		if ( !empty ( $item['sub_items'] ) ) {
+		if ( ! empty ( $item['sub_items'] ) ) {
 
 			foreach( $item['sub_items'] as $sub_item_name => $sub_item ) {
 
 				// Reset all defaults (if user clicks "Reset" button)
 				if ( $reset ) {
 					$options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default'] ) ? $sub_item['default'] : '';
-					$options[ htmlspecialchars( 'modifier-' . $sub_item_name ) ] = 0;
+					$options[ htmlspecialchars( 'modifier-' . $item_name . '-' .$sub_item_name ) ] = ! empty( $sub_item['default-modifier'] ) ? $sub_item['default-modifier'] : '';
 				}
 
 				// Add default hotkey for new options
 				elseif ( ! isset( $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] ) ) {
 					$options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default'] ) ? $sub_item['default'] : '';
-					$options[ htmlspecialchars( 'modifier-' . $sub_item_name ) ] = 0;
+					$options[ htmlspecialchars( 'modifier-' . $item_name . '-' . $sub_item_name ) ] = ! empty( $sub_item['default-modifier'] ) ? $sub_item['default-modifier'] : '';
 				}
 
 				// Set hotkey for $wh_menu_items submenu items
-				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['hotkey'] = $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ];
-				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['modifier'] = $options[ htmlspecialchars( 'modifier-' . $item_name . '-' . $sub_item_name ) ];
+				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['hotkey'] = ! empty( $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] ) ? $options[ htmlspecialchars( $item_name . '-' . $sub_item_name ) ] : '';
+				$wh_menu_items[ $item_name ]['sub_items'][ $sub_item_name ]['modifier'] = ! empty ( $options[ htmlspecialchars( 'modifier-' . $item_name . '-' . $sub_item_name ) ] ) ? $options[ htmlspecialchars( 'modifier-' . $item_name . '-' . $sub_item_name ) ] : '';
 				
 			}
 

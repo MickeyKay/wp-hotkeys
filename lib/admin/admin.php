@@ -74,7 +74,7 @@ function wh_output_settings() { ?>
  */
 function wh_register_settings() {
 
-	global $wh_menu_items;
+	global $menu, $submenu, $wh_menu_items;
 			
 	register_setting( 'wh-settings-group', 'wh-settings-group', 'wh-settings-validate' );
 
@@ -117,7 +117,11 @@ function wh_register_settings() {
 	$sub_duplicates = '';
 
 	// Check for duplicates
-	foreach ( $wh_menu_items as $item_file => $item) {
+	foreach ( $wh_menu_items as $item_file => $item ) {
+
+		// Only continue if hotkey's associated menu item is active
+		if ( ! hotkey_item_is_active( $item_file ) )
+			continue;
 
 		// Top level
 		if ( $item['hotkey'] )
@@ -128,6 +132,10 @@ function wh_register_settings() {
 			continue;
 
 		foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
+
+			// Only continue if hotkey's associated menu item is active
+			if ( ! hotkey_item_is_active( $sub_item_file ) )
+				continue;
 
 			if ( $sub_item['hotkey'] )
 				$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'] . '-' . $sub_item['modifier'];
@@ -294,6 +302,43 @@ function wh_output_fields( $field ) {
 	if ( !empty( $field['args']['description'] ) )
 		echo '<br /><em>' . $field['args']['description'] . "</em>\n";
 
+}
+
+/**
+ * Check if a hotkey's associated menu item exists
+ *
+ * This check is necessary to prevent default hotkeys
+ * from triggering duplicates on installs in which the 
+ * associated menu item doesn't exist (e.g. Genesis)
+ *
+ * @package WP Hotkeys
+ * @since   1.0	
+ *
+ * @param   string $item_file Hotkey's associated menu file
+ * @return  book True if active
+ */
+function hotkey_item_is_active( $item_file ) {
+	global $menu, $submenu;
+
+	$hotkey_item_is_active = false;
+
+	// Check top-level menu items
+	foreach( $menu as $menu_item ) {
+		// Compare active menu item file with hotkey's associated file
+		if ( $menu_item[2] == $item_file )
+			$hotkey_item_is_active = true;
+	}
+
+	// Check sub-level menu items
+	foreach( $submenu as $top_file => $submenu_item ) {
+		foreach( $submenu_item as $menu_item ) {
+			// Compare active menu item file with hotkey's associated file
+			if ( $menu_item[2] == $item_file )
+				$hotkey_item_is_active = true;
+		}
+	}
+
+	return $hotkey_item_is_active;
 }
 
 function wh_get_keys_for_duplicates( $array ) {
