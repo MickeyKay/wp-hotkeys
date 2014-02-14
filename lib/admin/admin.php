@@ -113,47 +113,46 @@ function wh_register_settings() {
 	);
 
 	// 2. Do hotkey settings for each admin menu item
-	$duplicate = '';
-	$sub_duplicates = '';
 
 	// Check for duplicates
-	foreach ( $wh_menu_items as $item_file => $item ) {
-
-		// Only continue if hotkey's associated menu item is active
-		if ( ! hotkey_item_is_active( $item_file ) )
-			continue;
-
-		// Top level
-		if ( $item['hotkey'] )
-			$hotkeys[ $item_file ] = $item['hotkey'] . '-' . $item['modifier'];
-
-		// Sub level
-		if ( empty( $item['sub_items'] ) )
-			continue;
-
-		foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
+	if ( $menu && $submenu ) {
+		foreach ( $wh_menu_items as $item_file => $item ) {
 
 			// Only continue if hotkey's associated menu item is active
-			if ( ! hotkey_item_is_active( $sub_item_file ) )
+			if ( ! hotkey_item_is_active( $item_file ) )
 				continue;
 
-			if ( $sub_item['hotkey'] )
-				$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'] . '-' . $sub_item['modifier'];
+			// Top level
+			if ( $item['hotkey'] )
+				$hotkeys[ $item_file ] = $item['hotkey'] . '-' . $item['modifier'];
 
+			// Sub level
+			if ( empty( $item['sub_items'] ) )
+				continue;
+
+			foreach ( $item['sub_items'] as $sub_item_file => $sub_item ) {
+
+				// Only continue if hotkey's associated menu item is active
+				if ( ! hotkey_item_is_active( $sub_item_file ) )
+					continue;
+
+				if ( $sub_item['hotkey'] )
+					$sub_hotkeys[ $item_file ][ $sub_item_file ] = $sub_item['hotkey'] . '-' . $sub_item['modifier'];
+
+			}
+
+			if ( isset( $sub_hotkeys[ $item_file ] ) && wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] ) )
+				$sub_duplicates[ $item_file ] = wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] );
+		
 		}
 
-		if ( isset( $sub_hotkeys[ $item_file ] ) && wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] ) )
-			$sub_duplicates[ $item_file ] = wh_get_keys_for_duplicates( $sub_hotkeys[ $item_file ] );
-	
+		// Top level duplicates array
+		if ( $hotkeys )
+			$duplicates = wh_get_keys_for_duplicates( $hotkeys );
+
+		if ( $duplicates || $sub_duplicates )
+			add_action( 'admin_notices', 'wh_admin_notice' );
 	}
-
-	// Top level duplicates array
-	if ( $hotkeys )
-		$duplicates = wh_get_keys_for_duplicates( $hotkeys );
-
-	if ( $duplicates || $sub_duplicates )
-		add_action( 'admin_notices', 'wh_admin_notice' );
-			
 
 	// Output actual fields
 	foreach ( $wh_menu_items as $item_file => $item) {				
@@ -319,7 +318,7 @@ function wh_output_fields( $field ) {
  */
 function hotkey_item_is_active( $item_file ) {
 	global $menu, $submenu;
-
+			
 	$hotkey_item_is_active = false;
 
 	// Check top-level menu items

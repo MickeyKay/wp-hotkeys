@@ -14,8 +14,6 @@
  * language stuff i18n
  * add ability to export/import
  * minify and provide non-minified version
- * Reset not working for very first select
- * Setup default modifiers (not just 0), e.g. for shift+g for genesis
  */
 
 // Definitions
