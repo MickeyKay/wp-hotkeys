@@ -3,20 +3,16 @@
 /**
  * Creates admin settings page
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 
 /**
-
-	TODO:
-	- Fix reset to reset modifiers to
-	- COmment all functions
-
-**/
-
-
+ * Set up WP Hotkeys settings page in WP admin
+ *
+ * @package WP Hotkeys
+ * @since   0.9.0
+ */
 function wh_do_settings_page() {
 
 	// Create admin menu item
@@ -26,27 +22,16 @@ function wh_do_settings_page() {
 add_action( 'admin_menu', 'wh_do_settings_page' );
 
 /**
- * Outputs settings page with form
+ * Output settings page with form
  *
  * @package WP Hotkeys
- * @since   1.0
+ * @since   0.9.0
  */
 function wh_output_settings() { ?>
 	<div class="wrap">
 		<?php screen_icon(); ?>
 		<h2><?php echo WH_PLUGIN_NAME; ?></h2>
 		<form method="post" action="options.php" class="wh-form">
-			<style>
-				.wh-form tr:first-child .warning {
-					border-color: red;
-				}
-
-				.wh-form .warning {
-					border-color: orange;
-				}
-
-
-			</style>
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
 				<a type="reset" name="wh-reset" id="wh-reset-top" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wp-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wp-hotkeys' ); ?></a>
@@ -67,10 +52,10 @@ function wh_output_settings() { ?>
 <?php }
 
 /**
- * Registers plugin settings
+ * Register plugin settings
  *
  * @package WP Hotkeys
- * @since   1.0
+ * @since   0.9.0
  */
 function wh_register_settings() {
 
@@ -117,6 +102,7 @@ function wh_register_settings() {
 	// Check for duplicates
 	$duplicates = $sub_duplicates = [];
 	if ( $menu && $submenu ) {
+
 		foreach ( $wh_menu_items as $item_file => $item ) {
 
 			// Only continue if hotkey's associated menu item is active
@@ -153,10 +139,12 @@ function wh_register_settings() {
 
 		if ( $duplicates || $sub_duplicates )
 			add_action( 'admin_notices', 'wh_admin_notice' );
+
 	}
 
 	// Output actual fields
-	foreach ( $wh_menu_items as $item_file => $item) {				
+	foreach ( $wh_menu_items as $item_file => $item) {
+
 		if ( empty( $item['name'] ) )
 			continue;
 
@@ -235,10 +223,10 @@ function wh_register_settings() {
 add_action( 'admin_init', 'wh_register_settings' );
 
 /**
- * Adds and registers settings field
+ * Add and register each settings field
  *
  * @package WP Hotkeys
- * @since   1.0		
+ * @since   0.9.0
  */	
 function wh_register_settings_field( $id, $title, $callback, $page, $section, $field ) {
 
@@ -250,6 +238,14 @@ function wh_register_settings_field( $id, $title, $callback, $page, $section, $f
 
 }
 
+/**
+ * Output HTML for each option
+ *
+ * @package WP Hotkeys
+ * @since   0.9.0
+ *
+ * @param   array $field Options field with all associated params
+ */
 function wh_output_fields( $field ) {
 
 	// Get hotkey options
@@ -312,10 +308,10 @@ function wh_output_fields( $field ) {
  * associated menu item doesn't exist (e.g. Genesis)
  *
  * @package WP Hotkeys
- * @since   1.0	
+ * @since   0.9.0
  *
  * @param   string $item_file Hotkey's associated menu file
- * @return  book True if active
+ * @return  bool True if active
  */
 function hotkey_item_is_active( $item_file ) {
 	global $menu, $submenu;
@@ -341,6 +337,15 @@ function hotkey_item_is_active( $item_file ) {
 	return $hotkey_item_is_active;
 }
 
+/**
+ * Get keys for duplicate hotkeys
+ *
+ * @package WP Hotkeys
+ * @since   0.9.0
+ *
+ * @param   array $array Array of all duplicate hotkeys
+ * @return  array Keys of duplicate hotkeys
+ */
 function wh_get_keys_for_duplicates( $array ) {
 
 	$counts = array_count_values( $array );
@@ -353,6 +358,15 @@ function wh_get_keys_for_duplicates( $array ) {
 
 }
 
+/**
+ * Validate all options
+ *
+ * @package WP Hotkeys
+ * @since   0.9.0
+ *
+ * @param   array $orig_options All options upon form submit
+ * @return  array Options validated to be only alphanumeric
+ */
 function wh_settings_validation( $orig_options ) {
     
 	// New validated options array    
@@ -372,6 +386,12 @@ function wh_settings_validation( $orig_options ) {
 			
 }
 
+/**
+ * Output duplicate notice in the admin if need be
+ *
+ * @package WP Hotkeys
+ * @since   0.9.0
+ */
 function wh_admin_notice() { ?>
 	<div class="error">
 		<p><?php printf( __( '<b>There are duplicate hotkeys.</b> Please visit the %sWP Hotkeys settings page%s to fix this issue.', 'wp-hotkeys' ), '<a href="options-general.php?page=wp-hotkeys&settings-updated=true">', '</a>' ); ?></p>

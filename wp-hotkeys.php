@@ -2,19 +2,19 @@
 /**
  * Plugin Name: WP Hotkeys
  * Plugin URI:  http://mightyminnow.com
- * Description: Provides hotkeys to navigate the WordPress dashboard.
- * Version:     1.0.0
+ * Description: Provides keyboard shortcuts to quickly navigate the WordPress dashboard.
+ * Version:     0.9.0
  * Author:      MIGHTYminnow
  * Author URI:  http://mightyminnow.com
  * License:     GPLv2+
  */
 
 /**
- * TODO
- * language stuff i18n
- * add ability to export/import
- * minify and provide non-minified version
- */
+
+	TODO:
+	- Add ability to export/import hotkey setups
+
+**/
 
 // Definitions
 define( 'WH_PLUGIN_NAME', 'WP Hotkeys' );
@@ -23,11 +23,10 @@ define( 'WH_PLUGIN_NAME', 'WP Hotkeys' );
 require_once dirname( __FILE__ ) . '/lib/admin/admin.php';
 
 /**
- * Loads text domain for internationalization
+ * Load text domain for internationalization
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 function wh_init() {
 
@@ -40,9 +39,8 @@ add_action( 'plugins_init', 'wh_init' );
 /**
  * Enqueue required scripts & styles and pass PHP variables to jQuery file
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 function wh_admin_scripts() {
     
@@ -56,7 +54,7 @@ function wh_admin_scripts() {
 	wp_enqueue_script( 'jquery-hotkeys' );
 
 	// Include WPH jQuery
-    wp_enqueue_script( 'wp-hotkeys-jquery', plugins_url( '/lib/js/wp-hotkeys.js', __FILE__ ), array( 'jquery' ), '1.0.0', false );
+    wp_enqueue_script( 'wp-hotkeys-jquery', plugins_url( '/lib/js/wp-hotkeys.min.js', __FILE__ ), array( 'jquery' ), '0.9.0', false );
 
     // Include WPH admin styles
     wp_enqueue_style( 'wp-hotkeys-css', plugins_url( '/lib/css/wp-hotkeys.css', __FILE__ ) );
@@ -65,9 +63,9 @@ function wh_admin_scripts() {
 	$phpVars = array (
 		'menuItems' => $wh_menu_items,
 		'adminUrl' => get_admin_url(),
-		'showHints' => $options[ 'show-hints' ],
-		'closeHoverHotkey' => $options[ 'close-hover-hotkey' ],
-		'closeHoverHotkeyModifier' => $options[ 'modifier-close-hover-hotkey' ],
+		'showHints' => $options['show-hints'],
+		'closeHoverHotkey' => $options['close-hover-hotkey'],
+		'closeHoverHotkeyModifier' => $options['modifier-close-hover-hotkey'],
 	);
 
 	// Pass menu items to jQuery
@@ -79,9 +77,8 @@ add_action( 'admin_enqueue_scripts', 'wh_admin_scripts' );
 /**
  * Setup $menu_item array
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 function wh_menu_functionality() {
     
@@ -109,9 +106,8 @@ add_action( 'admin_init', 'wh_menu_functionality', 9 );
 /**
  * Setup menu_items[] array with admin top-level and sub-menu items
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  *
  * @return  array $wh_menu_items array populated with admin top-level and sub-menu items
  */
@@ -122,13 +118,14 @@ function wh_get_menu_items() {
 	$wh_menu_items = array();
 
 	// Prevent breakage with AJAX when dragging widgets
-	if ( !$menu )
+	if ( ! $menu || ! $submenu )
 		return false;
 			
 	// Top level menu items
 	foreach ( $menu as $item ) {
 		
-		$top_name = rtrim( preg_replace( '/<span.*<\/span>/', '', $item[0] ) ); /* Remove all 'count' spans, e.g. Updates <span...>5</span> */
+		// Remove all 'count' spans, e.g. Updates <span...>5</span>
+		$top_name = rtrim( preg_replace( '/<span.*<\/span>/', '', $item[0] ) );
 
 		$top_file = $item[2];
 
@@ -140,12 +137,12 @@ function wh_get_menu_items() {
 	
 		// Sub menu items
 		foreach ( $submenu as $p_file => $submenu_item ) {
-
 		
 			if ( $top_file == $p_file ) {
 
 				foreach ( $submenu_item as $submenu_item ) {
 					
+					// Remove all 'count' spans, e.g. Updates <span...>5</span>
 					$submenu_item_name = rtrim( preg_replace( '/<span.*<\/span>/', '', $submenu_item[0] ) ); /* Remove all 'count' spans, e.g. Updates <span...>5</span> */
 
 					$sub_file = $submenu_item[2];
@@ -172,17 +169,16 @@ function wh_get_menu_items() {
 /**
  * Get the URL of an admin menu item
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  *
  * @param   string $menu_item_file admin menu item file
  *          - can be obtained via array key #2 for any item in the global $menu or $submenu array
  * @param   boolean $submenu_as_parent
- * 
  * @return  string URL of admin menu item, NULL if the menu item file can't be found in $menu or $submenu 
  */
 function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
+	
 	global $menu, $submenu, $self, $parent_file, $submenu_file, $plugin_page, $typenow;
 
 	$admin_is_parent = false;
@@ -204,6 +200,7 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 			$submenu_items = $submenu[$item[2]];
 
 		if ( $submenu_as_parent && ! empty( $submenu_items ) ) {
+			
 			$submenu_items = array_values( $submenu_items );  // Re-index.
 			$menu_hook = get_plugin_page_hook( $submenu_items[0][2], $item[2] );
 			$menu_file = $submenu_items[0][2];
@@ -215,7 +212,9 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 			} else {
 				$url = $submenu_items[0][2];
 			}
+
 		} elseif ( ! empty( $item[2] ) && current_user_can( $item[1] ) ) {
+			
 			$menu_hook = get_plugin_page_hook( $item[2], 'admin.php' );
 			$menu_file = $item[2];
 			if ( false !== ( $pos = strpos( $menu_file, '?' ) ) )
@@ -226,34 +225,42 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 			} else {
 				$url = $item[2];
 			}
+
 		}
 	}
 
 	// 2. Check if sub-level menu item
 	if ( ! $item ) {
+
 		$sub_item = '';
+
 		foreach( $submenu as $top_file => $submenu_items ) {
 					
 			// Reindex $submenu_items
 			$submenu_items = array_values( $submenu_items );
 
 			foreach( $submenu_items as $key => $submenu_item ) {
+				
 				if ( array_keys( $submenu_item, $menu_item_file ) ) {
 					$sub_item = $submenu_items[ $key ];
 					break;
 				}
+
 			}					
 			
 			if ( ! empty( $sub_item ) )
 				break;
+
 		}
 
 		// Get top-level parent item
 		foreach( $menu as $key => $menu_item ) {
+			
 			if ( array_keys( $menu_item, $top_file, true ) ) {
 				$item = $menu[ $key ];
 				break;
 			}
+
 		}
 
 		// If the $menu_item_file parameter doesn't match any menu item, return false
@@ -275,11 +282,13 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 			$sub_file = substr($sub_file, 0, $pos);
 
 		if ( ! empty( $menu_hook ) || ( ( 'index.php' != $sub_item[2] ) && file_exists( WP_PLUGIN_DIR . "/$sub_file" ) && ! file_exists( ABSPATH . "/wp-admin/$sub_file" ) ) ) {
+			
 			// If admin.php is the current page or if the parent exists as a file in the plugins or admin dir
 			if ( ( ! $admin_is_parent && file_exists( WP_PLUGIN_DIR . "/$menu_file" ) && ! is_dir( WP_PLUGIN_DIR . "/{$item[2]}" ) ) || file_exists( $menu_file ) )
 				$url = add_query_arg( array( 'page' => $sub_item[2] ), $item[2] );
 			else
 				$url = add_query_arg( array( 'page' => $sub_item[2] ), 'admin.php' );
+
 		} else {
 			$url = $sub_item[2];
 		}
@@ -292,12 +301,10 @@ function get_admin_menu_item_url( $menu_item_file, $submenu_as_parent = true ) {
 /**
  * Setup hotkey defaults on $wh_menu_items array
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  *
  * @param   array $wh_menu_items array of admin menu items
- * 
  * @return  array admin menu array with hotkey defaults added
  */
 function wh_hotkey_defaults( $wh_menu_items ) {
@@ -332,7 +339,7 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 	
 	// Comments
 	$wh_menu_items['edit-comments.php']['default']                                                         = 'c';
-	
+
 	// Genesis
 	$wh_menu_items['genesis']['default']                                                                   = 'g';
 	$wh_menu_items['genesis']['default-modifier']                                                          = 'shift';
@@ -393,9 +400,8 @@ function wh_hotkey_defaults( $wh_menu_items ) {
 /**
  * Update wh-options option with default hotkeys
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  *
  * @param   array &$wh_menu_items array of admin menu items (by reference)
  * @param   boolean $reset whether to entirely reset defaults (true) or just not-yet-existing options (false)
@@ -408,6 +414,7 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 	// General defaults
 	// Reset all defaults (if user clicks "Reset" button)
 	foreach( $general_options as $option_name => $option ) {
+		
 		if ( $reset ) {
 			$options[ $option_name ] = ! empty( $option ) ? $option : '';
 			$options[ 'modifier-' . $option_name ] = 0;
@@ -418,10 +425,12 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 			$options[ $option_name ] = ! empty( $option ) ? $option : '';
 			$options[ 'modifier-' . $option_name ] = 0;
 		}
+
 	}		
 	
 	// Hotkey defaults
 	foreach ( $wh_menu_items as $item_name => $item) {
+		
 		// Reset all defaults (if user clicks "Reset" button)
 		if ( $reset ) {
 			$options[ htmlspecialchars( $item_name ) ] = ! empty( $item['default'] ) ? $item['default'] : '';
@@ -468,4 +477,5 @@ function wh_set_defaults( &$wh_menu_items, $general_options, $reset = false ) {
 
 	if ( $reset )
 		wp_redirect( admin_url( 'options-general.php?page=wp-hotkeys' ) );
+
 }

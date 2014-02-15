@@ -1,9 +1,8 @@
 /**
  * WP Hotkeys CSS
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 
 .wph-top-level {
@@ -12,4 +11,12 @@
 
 .wph-active > a {
 	text-decoration: underline !important;
+}
+
+.wh-form tr:first-child .warning {
+	border-color: red;
+}
+
+.wh-form .warning {
+	border-color: orange;
 }

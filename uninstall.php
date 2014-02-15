@@ -2,9 +2,8 @@
 /**
  * Uninstall functionality
  *
- * @since   1.0.0
- * 
  * @package WP Hotkeys
+ * @since   0.9.0
  */
 
 // Exit if called directly
