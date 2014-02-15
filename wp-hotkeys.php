@@ -67,6 +67,7 @@ function wh_admin_scripts() {
 		'adminUrl' => get_admin_url(),
 		'showHints' => $options[ 'show-hints' ],
 		'closeHoverHotkey' => $options[ 'close-hover-hotkey' ],
+		'closeHoverHotkeyModifier' => $options[ 'modifier-close-hover-hotkey' ],
 	);
 
 	// Pass menu items to jQuery

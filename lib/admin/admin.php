@@ -52,10 +52,10 @@ function wh_output_settings() { ?>
 				<a type="reset" name="wh-reset" id="wh-reset-top" class="button button-primary wh-reset" href="<?php echo admin_url( 'options-general.php?page=wp-hotkeys&wh-reset=true&wh-nonce='. wp_create_nonce( 'wh-nonce' ) ); ?>" onClick="return whConfirmReset()"><?php _e( 'Reset Defaults', 'wp-hotkeys' ); ?></a>
 			</p>
 			<?php settings_fields( 'wp-hotkeys' ); ?>
-			<h2><?php _e( 'General Settings', 'wp-hotkeys'); ?></h2>
+			<h2><?php _e( 'General Settings', 'wp-hotkeys' ); ?></h2>
 		    <?php do_settings_sections( 'general-settings' ); ?>
 		    <br />
-		    <h2><?php _e( 'Hotkeys', 'wp-hotkeys'); ?></h2>
+		    <h2><?php _e( 'Hotkeys', 'wp-hotkeys' ); ?></h2>
 		    <?php do_settings_sections( 'wp-hotkeys' ); ?>
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
@@ -76,7 +76,7 @@ function wh_register_settings() {
 
 	global $menu, $submenu, $wh_menu_items;
 			
-	register_setting( 'wh-settings-group', 'wh-settings-group', 'wh-settings-validate' );
+	register_setting( 'wh-options', 'wh-options', 'wh_settings_validation' );
 
 	// 1. General Options
 	add_settings_section(
@@ -115,6 +115,7 @@ function wh_register_settings() {
 	// 2. Do hotkey settings for each admin menu item
 
 	// Check for duplicates
+	$duplicates = $sub_duplicates = [];
 	if ( $menu && $submenu ) {
 		foreach ( $wh_menu_items as $item_file => $item ) {
 
@@ -276,11 +277,11 @@ function wh_output_fields( $field ) {
 			$modifier_id = 'modifier-' . $id;
 			?>
 			<select name="wh-options[<?php echo htmlspecialchars( $modifier_id ); ?>]" id="<?php echo $modifier_id; ?>">
-				<option value="0" <?php selected( $options[ $modifier_id ], 0 ); ?>>No modifier key</option>
-				<option value="shift" <?php selected( $options[ $modifier_id ], 'shift' ); ?>>Shift</option>
-				<option value="meta" <?php selected( $options[ $modifier_id ], 'meta' ); ?>>Command</option>
-				<option value="ctrl" <?php selected( $options[ $modifier_id ], 'ctrl' ); ?>>Control</option>
-				<option value="alt" <?php selected( $options[ $modifier_id ], 'alt' ); ?>>Option / Alt</option>
+				<option value="0" <?php selected( $options[ $modifier_id ], 0 ); ?>><?php _e( 'No modifier key', 'wp-hotkeyps' ); ?></option>
+				<option value="shift" <?php selected( $options[ $modifier_id ], 'shift' ); ?>><?php _e( 'Shift', 'wp-hotkeyps' ); ?></option>
+				<option value="meta" <?php selected( $options[ $modifier_id ], 'meta' ); ?>><?php _e( 'Command', 'wp-hotkeyps' ); ?></option>
+				<option value="ctrl" <?php selected( $options[ $modifier_id ], 'ctrl' ); ?>><?php _e( 'Control', 'wp-hotkeyps' ); ?></option>
+				<option value="alt" <?php selected( $options[ $modifier_id ], 'alt' ); ?>><?php _e( 'Option / Alt', 'wp-hotkeys' ); ?></option>
 			</select>
 			<?
 			break;
@@ -352,10 +353,28 @@ function wh_get_keys_for_duplicates( $array ) {
 
 }
 
+function wh_settings_validation( $orig_options ) {
+    
+	// New validated options array    
+	$options = array();
+
+    // Loop through each of the incoming options
+    foreach( $orig_options as $option => $value ) {
+         
+        // Check to see if the current option has a value. If so, sanitize for alphanumeric only
+        if ( isset( $orig_options[ $option ] ) )
+   			$options[ $option ] = preg_replace('/[^a-zA-Z0-9]+/', '', $orig_options[ $option ] );
+
+    }
+    		
+    // Return the array processing any additional functions filtered by this action
+    return apply_filters( 'wh_settings_validation', $options, $orig_options );		
+			
+}
+
 function wh_admin_notice() { ?>
 	<div class="error">
 		<p><?php printf( __( '<b>There are duplicate hotkeys.</b> Please visit the %sWP Hotkeys settings page%s to fix this issue.', 'wp-hotkeys' ), '<a href="options-general.php?page=wp-hotkeys&settings-updated=true">', '</a>' ); ?></p>
-		<p>Top level duplicates are indicated with red.<br />
-			Sub-level duplicates are indicated with orange.</p>
+		<p><?php _e( 'Top level duplicates are outlined in red.<br />Sub-level duplicates are outlined in orange.', 'wp-hotkeys' ); ?></p>
 	</div>
 <?php }
