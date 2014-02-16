@@ -11,7 +11,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 WP Hotkeys provides time-saving keyboard shortcuts to help you quickly navigate the WordPress dashboard.
 
 == Description ==
-WP Hotkeys helps you navigate your dashboard as quickly as possible with fully customizable keyboard shortcuts. After installing WP Hotkeys, you will see the default hotkey hints display in brackets next to each standard menu item in the admin. Typing a hotkey will access the associated top-level admin menu item (e.g. Pages), and will display any submenu items and activate their associated hotkeys (e.g. All Pages, Add New). At any point you can use the arrow keys to navigate between menu items (left/right will enter/exit submenus), and the enter key to navigate to the active (underlined) menu item.
+WP Hotkeys helps you navigate your dashboard as quickly as possible with fully customizable keyboard shortcuts. After installing WP Hotkeys, you will see the default hotkey hints display in brackets next to each standard menu item in the admin. Typing a hotkey will access the associated top-level admin menu item (e.g. Pages), and will display any submenu items and activate their associated hotkeys (e.g. All Pages, Add New). At any point you can use the arrow keys to navigate between menu items (left/right will enter/exit submenus), and the enter key to navigate to the active (underlined) menu item link.
 
 = Settings =
 WP Hotkeys settings can be found at *Settings > WP Hotkeys*.
