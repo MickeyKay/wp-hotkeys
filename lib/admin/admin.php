@@ -100,7 +100,7 @@ function wh_register_settings() {
 	// 2. Do hotkey settings for each admin menu item
 
 	// Check for duplicates
-	$duplicates = $sub_duplicates = [];
+	$duplicates = $sub_duplicates = array();
 	if ( $menu && $submenu ) {
 
 		foreach ( $wh_menu_items as $item_file => $item ) {
@@ -279,7 +279,7 @@ function wh_output_fields( $field ) {
 				<option value="ctrl" <?php selected( $options[ $modifier_id ], 'ctrl' ); ?>><?php _e( 'Control', 'wp-hotkeyps' ); ?></option>
 				<option value="alt" <?php selected( $options[ $modifier_id ], 'alt' ); ?>><?php _e( 'Option / Alt', 'wp-hotkeys' ); ?></option>
 			</select>
-			<?
+			<?php
 			break;
 
 		// Checkbox
@@ -321,7 +321,7 @@ function hotkey_item_is_active( $item_file ) {
 	// Check top-level menu items
 	foreach( $menu as $menu_item ) {
 		// Compare active menu item file with hotkey's associated file
-		if ( $menu_item[2] == $item_file )
+		if ( get_admin_menu_item_url( $menu_item[2] ) == $item_file )
 			$hotkey_item_is_active = true;
 	}
 
@@ -329,7 +329,7 @@ function hotkey_item_is_active( $item_file ) {
 	foreach( $submenu as $top_file => $submenu_item ) {
 		foreach( $submenu_item as $menu_item ) {
 			// Compare active menu item file with hotkey's associated file
-			if ( $menu_item[2] == $item_file )
+			if ( get_admin_menu_item_url( $menu_item[2] ) == $item_file )
 				$hotkey_item_is_active = true;
 		}
 	}
@@ -350,16 +350,27 @@ function wh_get_keys_for_duplicates( $array ) {
 
 	$counts = array_count_values( $array );
 	
-	$filtered = array_filter( $counts, function( $value ) {
-	    return $value != 1;
-	});
+	$filtered = array_filter( $counts, 'not_one' );
 
 	return array_keys( array_intersect( $array, array_keys( $filtered ) ) );
 
 }
 
 /**
- * Validate all options
+ * Check whether value is not 1
+ *
+ * @package WP Hotkeys
+ * @since   0.9.7
+ *
+ * @param   int $value Value to check
+ * @return  bool True, if $value is not equal to 1
+ */
+function not_one( $value ) {
+    return $value != 1;
+}
+
+/**
+ * Sanitize all options
  *
  * @package WP Hotkeys
  * @since   0.9.0
@@ -377,7 +388,7 @@ function wh_settings_validation( $orig_options ) {
          
         // Check to see if the current option has a value. If so, sanitize for alphanumeric only
         if ( isset( $orig_options[ $option ] ) )
-   			$options[ $option ] = preg_replace('/[^a-zA-Z0-9]+/', '', $orig_options[ $option ] );
+   			$options[ $option ] = preg_replace('/[^a-zA-Z0-9]+/', '', wp_kses_post( $orig_options[ $option ] ) );
 
     }
     		

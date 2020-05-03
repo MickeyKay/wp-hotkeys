@@ -3,18 +3,11 @@
  * Plugin Name: WP Hotkeys
  * Plugin URI:  http://mightyminnow.com
  * Description: Provides keyboard shortcuts to quickly navigate the WordPress dashboard.
- * Version:     0.9.0
+ * Version:     0.9.8
  * Author:      MIGHTYminnow
  * Author URI:  http://mightyminnow.com
  * License:     GPLv2+
  */
-
-/**
-
-	TODO:
-	- Add ability to export/import hotkey setups
-
-**/
 
 // Definitions
 define( 'WH_PLUGIN_NAME', 'WP Hotkeys' );
@@ -31,7 +24,7 @@ require_once dirname( __FILE__ ) . '/lib/admin/admin.php';
 function wh_init() {
 
     // Load plugin text domain
-    load_plugin_textdomain( 'wh', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+    load_plugin_textdomain( 'wp-hotkeys', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 }
 add_action( 'plugins_init', 'wh_init' );
